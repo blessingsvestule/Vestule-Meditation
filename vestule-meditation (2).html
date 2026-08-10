@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vestule Meditation</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<meta name="theme-color" content="#10151C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vestule">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10151C;
+    --ink-2:#171E27;
+    --ink-3:#212A35;
+    --parchment:#EDE6D6;
+    --parchment-dim:#B9B3A2;
+    --amber:#C8893F;
+    --amber-soft:#E0AD73;
+    --sage:#6B8470;
+    --muted:#3A3F47;
+    --danger:#C97361;
+    --radius:18px;
+    --serif:'Source Serif 4', serif;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--sans);
+    background: radial-gradient(circle at 30% 0%, #182028 0%, var(--ink) 60%);
+    color:var(--parchment);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{ max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding-bottom:36px; }
+  .screen{ display:none; padding:26px 22px 8px; animation:fade .25s ease; }
+  .screen.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px 0; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{ width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--amber-soft), var(--amber) 70%); box-shadow:0 0 14px rgba(200,137,63,0.35); }
+  .brand-name{ font-family:var(--serif); font-size:16.5px; letter-spacing:.2px; }
+  .streak-pill{ display:flex; align-items:center; gap:6px; background:rgba(200,137,63,0.1); border:1px solid rgba(200,137,63,0.32); color:var(--amber-soft); font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:999px; }
+
+  .hero{ margin-top:16px; padding:26px 22px 30px; border-radius:var(--radius); background:linear-gradient(165deg, var(--ink-3), var(--ink-2) 75%); border:1px solid rgba(200,137,63,0.14); position:relative; overflow:hidden; }
+  .hero::after{ content:""; position:absolute; right:-40px; top:-40px; width:170px; height:170px; border-radius:50%; background:radial-gradient(circle, rgba(200,137,63,0.16), transparent 70%); }
+  .hero-eyebrow{ font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--sage); font-weight:700; margin-bottom:10px; }
+  .hero h1{ font-family:var(--serif); font-weight:500; font-size:25px; line-height:1.28; max-width:300px; }
+  .hero p{ margin-top:10px; color:var(--parchment-dim); font-size:14px; line-height:1.55; max-width:290px; }
+
+  .cta-row{ display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; }
+  .btn{ font-family:var(--sans); font-weight:700; font-size:14.5px; border:none; cursor:pointer; border-radius:14px; padding:14px 16px; transition:transform .12s ease; }
+  .btn:active{ transform:scale(0.97); }
+  .btn-primary{ background:var(--amber); color:var(--ink); box-shadow:0 6px 20px rgba(200,137,63,0.22); }
+  .btn-ghost{ background:rgba(255,255,255,0.05); color:var(--parchment); border:1px solid rgba(255,255,255,0.13); }
+  .btn-block{ width:100%; text-align:center; }
+  .btn-sm{ padding:9px 13px; font-size:12.5px; border-radius:10px; }
+
+  .quick-links{ display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+  .quick-link{ display:flex; align-items:center; justify-content:space-between; padding:15px 17px; border-radius:14px; background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); cursor:pointer; }
+  .ql-left{ display:flex; align-items:center; gap:12px; }
+  .ql-icon{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .ql-title{ font-weight:700; font-size:14px; }
+  .ql-sub{ font-size:12px; color:var(--parchment-dim); margin-top:2px; }
+  .chevron{ color:var(--parchment-dim); font-size:17px; }
+
+  .section-head{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .back-btn{ width:34px; height:34px; border-radius:50%; background:var(--ink-2); border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; color:var(--parchment); }
+  .section-title{ font-family:var(--serif); font-size:19px; font-weight:500; }
+  .section-sub{ font-size:12px; color:var(--parchment-dim); margin-top:2px; }
+
+  .toggle-group{ display:flex; background:var(--ink-2); border-radius:12px; padding:4px; margin-bottom:18px; border:1px solid rgba(255,255,255,0.06); }
+  .toggle-btn{ flex:1; text-align:center; padding:10px; border-radius:9px; font-size:13px; font-weight:700; color:var(--parchment-dim); cursor:pointer; }
+  .toggle-btn.active{ background:var(--ink-3); color:var(--amber-soft); }
+
+  .fam-header{ font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--sage); font-weight:700; margin:20px 0 10px; }
+  .fam-header:first-child{ margin-top:0; }
+  .filter-row{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px; }
+  .filter-chip{ flex-shrink:0; padding:8px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:var(--ink-2); border:1px solid rgba(255,255,255,0.08); color:var(--parchment-dim); cursor:pointer; }
+  .filter-chip.active{ background:rgba(200,137,63,0.14); color:var(--amber-soft); border-color:rgba(200,137,63,0.4); }
+
+  .pkg-spine{ display:flex; align-items:center; gap:14px; padding:16px 16px; border-radius:14px; background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); margin-bottom:10px; cursor:pointer; position:relative; overflow:hidden; }
+  .pkg-emoji{ width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; background:rgba(200,137,63,0.1); flex-shrink:0; }
+  .pkg-name{ font-family:var(--serif); font-size:15px; }
+  .pkg-meta{ font-size:11.5px; color:var(--parchment-dim); margin-top:3px; }
+  .pkg-badge{ margin-left:auto; font-size:11px; font-weight:800; padding:5px 10px; border-radius:999px; white-space:nowrap; }
+  .badge-free{ background:rgba(107,132,112,0.18); color:var(--sage); }
+  .badge-trial{ background:rgba(200,137,63,0.15); color:var(--amber-soft); }
+  .badge-locked{ background:rgba(255,255,255,0.06); color:var(--parchment-dim); }
+  .badge-unlocked{ background:rgba(107,132,112,0.18); color:var(--sage); }
+
+  .verse-card{ background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); border-radius:15px; padding:16px 17px; margin-bottom:11px; cursor:pointer; }
+  .verse-ref{ font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--amber-soft); font-weight:700; }
+  .verse-lock{ font-size:11px; color:var(--parchment-dim); margin-top:6px; }
+
+  .player-wrap{ display:flex; flex-direction:column; align-items:center; padding-top:6px; }
+  .ring-wrap{ position:relative; width:210px; height:210px; margin:8px 0 24px; display:flex; align-items:center; justify-content:center; }
+  .ring{ position:absolute; border-radius:50%; border:1.5px solid rgba(200,137,63,0.22); }
+  .ring1{ width:210px; height:210px; } .ring2{ width:172px; height:172px; } .ring3{ width:134px; height:134px; }
+  .ring.pulse{ animation:pulse 2.4s ease-in-out infinite; }
+  .ring2.pulse{ animation-delay:.2s; } .ring3.pulse{ animation-delay:.4s; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:.45; box-shadow:none;} 50%{ transform:scale(1.05); opacity:1; box-shadow:0 0 24px rgba(200,137,63,0.25);} }
+  .play-btn{ width:88px; height:88px; border-radius:50%; border:none; cursor:pointer; background:radial-gradient(circle at 35% 30%, var(--amber-soft), var(--amber) 75%); color:var(--ink); font-size:24px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 28px rgba(200,137,63,0.28); z-index:2; }
+  .rep-count{ text-align:center; font-size:12px; color:var(--parchment-dim); margin-bottom:6px; letter-spacing:.04em; text-transform:uppercase; font-weight:700; }
+  .player-verse{ background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); border-radius:18px; padding:22px; width:100%; margin-top:4px; min-height:80px; }
+  .player-ref{ font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--amber-soft); font-weight:700; margin-bottom:10px; }
+  .player-text{ font-family:var(--serif); font-size:16.5px; line-height:1.65; }
+  .loading-dots{ color:var(--parchment-dim); font-style:italic; font-size:14px; }
+
+  .control-row{ width:100%; margin-top:18px; }
+  .control-label{ display:flex; justify-content:space-between; font-size:12px; color:var(--parchment-dim); margin-bottom:8px; font-weight:600; }
+  input[type=range]{ width:100%; accent-color:var(--amber); }
+  .repeat-choices{ display:flex; gap:8px; margin-top:8px; }
+  .repeat-choice{ flex:1; text-align:center; padding:9px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; background:var(--ink-2); border:1px solid rgba(255,255,255,0.08); color:var(--parchment-dim); }
+  .repeat-choice.active{ background:rgba(200,137,63,0.14); color:var(--amber-soft); border-color:rgba(200,137,63,0.4); }
+
+  textarea, .text-input{ width:100%; background:var(--ink-2); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px; color:var(--parchment); font-family:var(--sans); font-size:14px; resize:vertical; }
+  .field-label{ font-size:12px; font-weight:700; color:var(--parchment-dim); margin:16px 0 8px; text-transform:uppercase; letter-spacing:.05em; }
+
+  .list-item{ background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:15px; margin-bottom:9px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .li-text{ font-size:13px; color:var(--parchment-dim); line-height:1.5; }
+  .li-ref{ font-size:11.5px; color:var(--amber-soft); font-weight:700; margin-bottom:4px; }
+  .icon-btn{ width:29px; height:29px; border-radius:8px; border:none; background:rgba(255,255,255,0.06); color:var(--parchment-dim); cursor:pointer; font-size:13px; }
+  .empty-state{ text-align:center; padding:46px 18px; color:var(--parchment-dim); }
+  .empty-state .em{ font-size:30px; margin-bottom:10px; }
+
+  .bottom-nav{ position:sticky; bottom:0; margin-top:auto; display:flex; justify-content:space-around; background:rgba(16,21,28,0.94); backdrop-filter:blur(10px); border-top:1px solid rgba(255,255,255,0.06); padding:12px 10px 16px; }
+  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--parchment-dim); font-size:10.5px; font-weight:700; cursor:pointer; }
+  .nav-item.active{ color:var(--amber-soft); }
+  .nav-emoji{ font-size:17px; }
+
+  /* Paywall sheet */
+  .sheet-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; align-items:flex-end; justify-content:center; z-index:50; }
+  .sheet-overlay.active{ display:flex; }
+  .sheet{ background:var(--ink-2); border-top:1px solid rgba(200,137,63,0.2); border-radius:22px 22px 0 0; padding:28px 22px 32px; width:100%; max-width:480px; }
+  .sheet-title{ font-family:var(--serif); font-size:21px; margin-bottom:8px; }
+  .sheet-body{ font-size:13.5px; color:var(--parchment-dim); line-height:1.55; margin-bottom:20px; }
+  .price-tag{ font-family:var(--serif); font-size:28px; color:var(--amber-soft); margin-bottom:4px; }
+
+  .greeting{ font-family:var(--serif); font-size:22px; font-weight:500; }
+  .greeting-sub{ font-size:12.5px; color:var(--parchment-dim); margin-top:4px; }
+  .votd-card{ margin-top:18px; padding:16px 17px; border-radius:15px; background:rgba(200,137,63,0.08); border:1px solid rgba(200,137,63,0.22); display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .votd-label{ font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--sage); font-weight:700; margin-bottom:4px; }
+  .votd-ref{ font-family:var(--serif); font-size:15px; }
+  .votd-play{ margin-left:auto; width:38px; height:38px; border-radius:50%; background:var(--amber); color:var(--ink); border:none; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; cursor:pointer; }
+
+  .flame-hero{ text-align:center; padding:20px 0 10px; }
+  .flame-big{ font-size:40px; }
+  .flame-num{ font-family:var(--serif); font-size:34px; margin-top:4px; }
+  .flame-lbl{ font-size:12px; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+  .week-strip{ display:flex; justify-content:space-between; margin:18px 0 24px; }
+  .day-dot{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .dlabel{ font-size:10.5px; color:var(--parchment-dim); font-weight:700; }
+  .dcircle{ width:30px; height:30px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--parchment-dim); }
+  .dcircle.done{ background:var(--amber); border-color:var(--amber); color:var(--ink); font-weight:800; }
+  .dcircle.today{ border-color:var(--amber-soft); color:var(--amber-soft); font-weight:800; }
+  .badge-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  .badge-card{ background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:16px 14px; text-align:center; }
+  .badge-card.locked{ opacity:.42; }
+  .badge-icon{ font-size:24px; }
+  .badge-name{ font-family:var(--serif); font-size:13.5px; margin-top:8px; }
+  .badge-req{ font-size:11px; color:var(--parchment-dim); margin-top:3px; }
+
+  .time-choices{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .time-choice{ padding:12px 16px; border-radius:12px; font-size:13.5px; font-weight:700; cursor:pointer; background:var(--ink-2); border:1px solid rgba(255,255,255,0.08); color:var(--parchment-dim); }
+  .time-choice.active{ background:rgba(200,137,63,0.14); color:var(--amber-soft); border-color:rgba(200,137,63,0.4); }
+  .note-box{ margin-top:18px; padding:14px 16px; border-radius:13px; background:rgba(107,132,112,0.08); border:1px solid rgba(107,132,112,0.22); font-size:12.5px; color:var(--parchment-dim); line-height:1.55; }
+
+  .mute-btn{ width:44px; height:44px; border-radius:50%; background:var(--ink-2); border:1px solid rgba(255,255,255,0.1); color:var(--parchment); font-size:16px; cursor:pointer; }
+  .player-controls-row{ display:flex; align-items:center; gap:16px; margin-top:4px; }
+  .translation-note{ text-align:center; font-size:11px; color:var(--parchment-dim); margin-top:14px; }
+  .loop-pkg-btn{ width:100%; margin-bottom:14px; padding:13px; border-radius:13px; background:rgba(200,137,63,0.1); border:1px solid rgba(200,137,63,0.3); color:var(--amber-soft); font-weight:700; font-size:13.5px; cursor:pointer; }
+
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block; position:absolute; left:0; top:0; width:100%; background:#fff; color:#1b1b1b; padding:40px; }
+    .p-verse{ font-family:Georgia, serif; font-size:16px; line-height:1.7; border-bottom:1px solid #ddd; padding:18px 0; }
+    .p-ref{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#a07a2d; font-weight:700; margin-bottom:6px; }
+    .p-title{ font-family:Georgia, serif; font-size:24px; margin-bottom:6px; }
+    .p-sub{ font-size:12px; color:#888; margin-bottom:26px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-name">Vestule Meditation</div></div>
+    <div class="streak-pill">🔥 <span id="streakCount">0</span> day streak</div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="greeting" id="homeGreeting">Good morning.</div>
+    <div class="greeting-sub" id="homeDate">—</div>
+    <div class="votd-card" id="votdCard" onclick="playVerseOfDay()" style="align-items:flex-start; flex-direction:column;">
+      <div style="display:flex; align-items:center; width:100%;">
+        <div><div class="votd-label">Verse of the day</div><div class="votd-ref" id="votdRef">Loading…</div></div>
+        <button class="votd-play" onclick="event.stopPropagation(); playVerseOfDay()">▶</button>
+      </div>
+      <div class="votd-text" id="votdText" style="margin-top:10px; font-family:var(--serif); font-size:14px; line-height:1.55; color:var(--parchment-dim);"></div>
+    </div>
+
+    <div class="hero" style="margin-top:22px;">
+      <div class="hero-eyebrow">Quiet time, made to last</div>
+      <h1>Find a verse. Let it stay with you.</h1>
+      <p>Browse scripture packages for every season and every member of the family, or bring your own verse — and let it play on repeat for as long as you need.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="go('browse')">Browse packages</button>
+        <button class="btn btn-ghost" onclick="go('addown')">Add my own</button>
+      </div>
+    </div>
+    <div class="quick-links">
+      <div class="quick-link" onclick="go('journey')">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(200,137,63,0.14); color:var(--amber-soft);">🔥</div><div><div class="ql-title">My Journey</div><div class="ql-sub">Streak, milestones & badges</div></div></div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="quick-link" onclick="go('mylist')">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(200,137,63,0.14); color:var(--amber-soft);">📖</div><div><div class="ql-title">My Loop List</div><div class="ql-sub" id="mylistCountLabel">0 verses saved</div></div></div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="quick-link" onclick="go('settings')">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">⏰</div><div><div class="ql-title">Daily Reminder</div><div class="ql-sub" id="reminderSubLabel">Not set</div></div></div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="quick-link" onclick="openPaywall(null)">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">✨</div><div><div class="ql-title" id="unlockTitle">Unlock all packages</div><div class="ql-sub">One payment, everything, forever</div></div></div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="quick-link" onclick="go('mylist'); setTimeout(exportPDF, 50)">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(200,137,63,0.14); color:var(--amber-soft);">🖨️</div><div><div class="ql-title">Export as PDF</div><div class="ql-sub">A printable keepsake of your list</div></div></div>
+        <div class="chevron">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURNEY -->
+  <div class="screen" id="screen-journey">
+    <div class="section-head">
+      <div class="back-btn" onclick="go('home')">‹</div>
+      <div><div class="section-title">Your Journey</div><div class="section-sub">Streak, this week, and milestones</div></div>
+    </div>
+    <div class="flame-hero">
+      <div class="flame-big">🔥</div>
+      <div class="flame-num" id="journeyStreakNum">0</div>
+      <div class="flame-lbl">Day Streak</div>
+    </div>
+    <div class="week-strip" id="weekStrip"></div>
+    <div class="section-sub" style="margin-bottom:10px;">Milestones</div>
+    <div class="badge-grid" id="badgeGrid"></div>
+  </div>
+
+  <!-- SETTINGS / REMINDER -->
+  <div class="screen" id="screen-settings">
+    <div class="section-head">
+      <div class="back-btn" onclick="go('home')">‹</div>
+      <div><div class="section-title">Settings</div><div class="section-sub">Reminder, listening, and downloads</div></div>
+    </div>
+
+    <div class="field-label">Daily Reminder</div>
+    <div id="reminderSupported">
+      <div class="quick-link" style="margin-bottom:6px;">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">⏰</div><div><div class="ql-title">Remind me to listen</div><div class="ql-sub">A gentle nudge, once a day — you choose the time</div></div></div>
+        <input type="time" id="reminderTimeInput" class="text-input" style="width:auto; padding:8px 10px;" onchange="setReminderTime(this.value)">
+      </div>
+      <div class="quick-link">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">🔕</div><div><div class="ql-title">Turn reminders off</div><div class="ql-sub" id="reminderStatusLabel">Not set</div></div></div>
+        <button class="btn btn-ghost btn-sm" onclick="setReminderTime('off')">Off</button>
+      </div>
+      <div class="note-box">One more step to make this real: add Vestule Meditation to your home screen (share icon → "Add to Home Screen") so it's allowed to notify you, the same way any app is.</div>
+    </div>
+    <div id="reminderUnsupported" style="display:none;">
+      <div class="note-box" style="background:rgba(200,137,63,0.08); border-color:rgba(200,137,63,0.22);">
+        <strong style="color:var(--amber-soft);">Reminders aren't available on this device yet.</strong><br>
+        iPhone notifications for home-screen apps need iOS 16.4 or later — this phone's browser doesn't support it. You can still use every other part of Vestule Meditation freely; you just won't get a daily nudge. Try again after updating iOS, or from an Android phone.
+      </div>
+    </div>
+
+    <div class="field-label">Listening</div>
+    <div class="quick-link">
+      <div class="ql-left"><div class="ql-icon" style="background:rgba(200,137,63,0.14); color:var(--amber-soft);">👁️</div><div><div class="ql-title">Show verse text while playing</div><div class="ql-sub">Turn off for audio-only, eyes-closed listening</div></div></div>
+      <input type="checkbox" id="showTextToggle" checked onchange="toggleShowText(this.checked)" style="width:20px; height:20px; accent-color:var(--amber);">
+    </div>
+
+    <div class="field-label">Downloads</div>
+    <div class="note-box" style="margin-top:0;">Each package you open caches its verses on your device automatically, so it works without internet the next time. Healing is pre-loaded the moment you open the app, since it's free for everyone. Use "Download for offline" on any package screen to cache it ahead of time.</div>
+  </div>
+
+
+  <!-- BROWSE -->
+  <div class="screen" id="screen-browse">
+    <div class="section-head">
+      <div class="back-btn" onclick="go('home')">‹</div>
+      <div><div class="section-title">Browse packages</div><div class="section-sub">By family member, or see everything</div></div>
+    </div>
+    <div class="toggle-group">
+      <div class="toggle-btn active" id="tabFamily" onclick="setBrowseMode('family')">By family</div>
+      <div class="toggle-btn" id="tabAll" onclick="setBrowseMode('all')">All packages</div>
+    </div>
+    <div id="filterRow" class="filter-row" style="display:none;"></div>
+    <div id="pkgList"></div>
+  </div>
+
+  <!-- PACKAGE DETAIL -->
+  <div class="screen" id="screen-package">
+    <div class="section-head">
+      <div class="back-btn" onclick="go('browse')">‹</div>
+      <div><div class="section-title" id="pkgTitle">Package</div><div class="section-sub" id="pkgSub">Tap a verse to loop it</div></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button class="loop-pkg-btn" id="loopPkgBtn" style="margin-bottom:0;" onclick="loopWholePackage()">▶ Loop the whole package</button>
+      <button class="loop-pkg-btn" id="downloadPkgBtn" style="margin-bottom:0; flex-shrink:0; width:auto;" onclick="downloadPackageOffline(currentPackage.id)">⬇︎</button>
+    </div>
+    <div id="pkgVerseList"></div>
+  </div>
+
+  <!-- PLAYER -->
+  <div class="screen" id="screen-player">
+    <div class="section-head">
+      <div class="back-btn" onclick="stopAndBack()">‹</div>
+      <div><div class="section-title">Now looping</div><div class="section-sub">Sit with it as long as you like</div></div>
+    </div>
+    <div class="player-wrap">
+      <div class="rep-count" id="repCountLabel">Rep 0</div>
+      <div class="ring-wrap">
+        <div class="ring ring1" id="ring1"></div><div class="ring ring2" id="ring2"></div><div class="ring ring3" id="ring3"></div>
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+      </div>
+      <div class="player-controls-row">
+        <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+        <button class="mute-btn" id="nextBtn" onclick="nextInContext()" style="display:none;">⏭</button>
+      </div>
+      <div class="player-verse" style="margin-top:14px;">
+        <div class="player-ref" id="playerRef">Reference</div>
+        <div class="player-text" id="playerText">Verse text</div>
+      </div>
+      <div class="translation-note" id="translationNote"></div>
+      <div class="control-row">
+        <div class="control-label"><span>Speaking pace</span><span id="paceVal">Normal</span></div>
+        <input type="range" min="0.6" max="1.3" step="0.05" value="0.95" id="paceRange" oninput="onPaceChange(this.value)">
+      </div>
+      <div class="control-row">
+        <div class="control-label"><span>Pause between repeats</span><span id="pauseVal">2s</span></div>
+        <input type="range" min="0" max="8" value="2" id="pauseRange" oninput="document.getElementById('pauseVal').textContent=this.value+'s'">
+      </div>
+      <div class="control-row">
+        <div class="control-label"><span>Repeat</span></div>
+        <div class="repeat-choices">
+          <div class="repeat-choice" data-val="3" onclick="setRepeatChoice(this)">3x</div>
+          <div class="repeat-choice" data-val="10" onclick="setRepeatChoice(this)">10x</div>
+          <div class="repeat-choice active" data-val="0" onclick="setRepeatChoice(this)">∞</div>
+        </div>
+      </div>
+      <div class="cta-row" style="margin-top:20px;"><button class="btn btn-ghost btn-block" onclick="addCurrentToList()">Save to My List</button></div>
+    </div>
+  </div>
+
+  <!-- ADD OWN -->
+  <div class="screen" id="screen-addown">
+    <div class="section-head">
+      <div class="back-btn" onclick="go('home')">‹</div>
+      <div><div class="section-title">Add your own</div><div class="section-sub">Always free, however many you like</div></div>
+    </div>
+    <div class="toggle-group">
+      <div class="toggle-btn active" id="tabByRef" onclick="setAddOwnMode('ref')">Just a reference</div>
+      <div class="toggle-btn" id="tabByText" onclick="setAddOwnMode('text')">I have the exact words</div>
+    </div>
+
+    <div id="addByRef">
+      <div class="field-label">Scripture reference</div>
+      <input class="text-input" id="quickRef" placeholder="e.g. Jeremiah 17:14 — heard it in church? type it here">
+      <div class="note-box" style="margin-top:10px;">We'll pull the exact BSB wording for you — no need to type it out.</div>
+      <div class="cta-row" style="margin-top:18px;"><button class="btn btn-primary btn-block" onclick="lookupAndPlay()">Look up & loop it</button></div>
+    </div>
+
+    <div id="addByText" style="display:none;">
+      <div class="field-label">Reference (optional)</div>
+      <input class="text-input" id="ownRef" placeholder="e.g. Philippians 4:6-7">
+      <div class="field-label">Scripture text</div>
+      <textarea id="ownText" rows="6" placeholder="Type or paste the verse here..."></textarea>
+      <div class="cta-row" style="margin-top:18px;"><button class="btn btn-primary btn-block" onclick="saveOwnAndPlay()">Save & loop it</button></div>
+    </div>
+  </div>
+
+  <!-- MY LIST -->
+  <div class="screen" id="screen-mylist">
+    <div class="section-head">
+      <div class="back-btn" onclick="go('home')">‹</div>
+      <div><div class="section-title">My Loop List</div><div class="section-sub" id="mylistSub">Your saved verses</div></div>
+    </div>
+    <div id="mylistContent"></div>
+    <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="exportPDF()">🖨️ Export as PDF</button>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" data-nav="home" onclick="go('home')"><div class="nav-emoji">🏠</div>Home</div>
+    <div class="nav-item" data-nav="browse" onclick="go('browse')"><div class="nav-emoji">🔎</div>Browse</div>
+    <div class="nav-item" data-nav="journey" onclick="go('journey')"><div class="nav-emoji">🔥</div>Journey</div>
+    <div class="nav-item" data-nav="mylist" onclick="go('mylist')"><div class="nav-emoji">📖</div>My List</div>
+    <div class="nav-item" data-nav="settings" onclick="go('settings')"><div class="nav-emoji">⚙️</div>Settings</div>
+  </div>
+</div>
+
+<!-- Paywall sheet -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="if(event.target===this) closePaywall()">
+  <div class="sheet">
+    <div class="sheet-title" id="sheetTitle">Unlock everything</div>
+    <div class="price-tag">₦1,500</div>
+    <div class="sheet-body" id="sheetBody">One payment unlocks every package — New Believer and Healing stay free either way. Get full access on Selar or Gumroad, then enter your code below to unlock it right here.</div>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <a class="btn btn-ghost" style="flex:1; text-align:center; text-decoration:none;" id="selarLink" href="#" target="_blank" rel="noopener">Buy on Selar</a>
+      <a class="btn btn-ghost" style="flex:1; text-align:center; text-decoration:none;" id="gumroadLink" href="#" target="_blank" rel="noopener">Buy on Gumroad</a>
+    </div>
+    <div class="field-label" style="margin-top:0;">Already purchased? Enter your code</div>
+    <input class="text-input" id="unlockCodeInput" placeholder="e.g. VESTULE-XXXX-XXXX" style="text-transform:uppercase;">
+    <div id="unlockError" style="color:var(--danger); font-size:12.5px; margin-top:8px; display:none;">That code doesn't look right — check your Selar or Gumroad receipt, or contact support.</div>
+    <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="redeemCode()">Redeem code</button>
+    <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="closePaywall()">Not now</button>
+  </div>
+</div>
+
+<div id="printArea">
+  <div class="p-title">My Loop List</div>
+  <div class="p-sub" id="printDate"></div>
+  <div id="printContent"></div>
+</div>
+
+<script>
+/* ================= Package data (references only — text fetched live) ================= */
+const PACKAGES = [
+  { id:'new-believer', name:'New Believer', emoji:'🌱', family:'For Everyone', free:true,
+    verses:['John 3:16','Romans 10:9','Romans 10:13','2 Corinthians 5:17','Ephesians 2:8-9','John 1:12','Romans 5:8','Acts 16:31','1 John 1:9','Romans 8:1','John 14:6','Romans 3:23','Romans 6:23','Galatians 2:20','John 10:10','1 Peter 2:9','Titus 3:5','John 5:24','Romans 8:38-39','Revelation 3:20'] },
+  { id:'healing', name:'Healing', emoji:'🌿', family:'For Everyone', free:true,
+    verses:['Jeremiah 17:14','Jeremiah 30:17','Psalm 103:2-3','3 John 1:2','Psalm 91:1-7','Isaiah 53:5','Exodus 15:26','James 5:15','Psalm 30:2','Psalm 41:3','Matthew 8:17','1 Peter 2:24','Psalm 107:20','Malachi 4:2','Psalm 147:3','Psalm 34:19','Psalm 6:2','2 Kings 20:5','Luke 4:18','Psalm 73:26'] },
+  { id:'faith-trust', name:'Faith & Trust', emoji:'🕊️', family:'For Everyone', free:false,
+    verses:['Proverbs 3:5-6','Hebrews 11:1','Mark 9:24','Romans 10:17','2 Corinthians 5:7','Matthew 17:20','Romans 4:20-21','Psalm 56:3','Isaiah 12:2','Hebrews 11:6','James 1:6','Psalm 9:10','1 John 5:4','Habakkuk 2:4','Proverbs 29:25','Psalm 20:7','Proverbs 16:3','Psalm 37:5','2 Timothy 1:12','Romans 15:13'] },
+  { id:'peace-rest', name:'Peace & Rest', emoji:'🌓', family:'For Everyone', free:false,
+    verses:['John 14:27','Isaiah 26:3','Matthew 11:28-30','Philippians 4:6-7','Psalm 4:8','Psalm 23:1-3','Colossians 3:15','Psalm 29:11','Isaiah 32:17','2 Thessalonians 3:16','Numbers 6:24-26','Psalm 46:10','John 16:33','Psalm 37:7','Proverbs 3:24','Psalm 55:22','Psalm 94:19','Isaiah 30:15','Psalm 62:1','Philippians 4:9'] },
+  { id:'mothers', name:'For Mothers', emoji:'🤱', family:'For Mothers', free:false,
+    verses:['Isaiah 66:13','Proverbs 31:25','Psalm 127:3','1 Samuel 1:27','Isaiah 49:15','Proverbs 31:28','Proverbs 31:29-30','Psalm 113:9','Genesis 33:5','Isaiah 40:11','Titus 2:3-4','Proverbs 22:6','1 Thessalonians 2:7','Psalm 139:13','Proverbs 14:1','Proverbs 31:27','Psalm 128:3','Luke 1:46-47','Isaiah 66:9','2 Timothy 1:5'] },
+  { id:'fathers', name:'For Fathers', emoji:'🛡️', family:'For Fathers', free:false,
+    verses:['Ephesians 6:4','Proverbs 22:6','Joshua 24:15','Psalm 127:3-5','Deuteronomy 6:6-7','Proverbs 20:7','Psalm 103:13','Colossians 3:21','Proverbs 23:24','1 Timothy 3:4-5','Proverbs 17:6','Malachi 4:6','Psalm 128:3-4','Proverbs 4:1','Genesis 18:19','Proverbs 13:22','Psalm 112:1-2','Proverbs 3:11-12','Deuteronomy 4:9','Ephesians 6:2-3'] },
+  { id:'children', name:'Children & Teens', emoji:'🐑', family:'For Children', free:false,
+    verses:['Jeremiah 29:11','Psalm 139:14','Proverbs 3:5-6','Philippians 4:13','Joshua 1:9','Proverbs 22:6','Isaiah 40:31','Psalm 119:105','Matthew 19:14','Proverbs 4:23','2 Timothy 1:7','Psalm 34:4','Proverbs 1:8-9','Ephesians 6:1','Deuteronomy 31:6','Psalm 121:7-8','Proverbs 22:15','3 John 1:4','Mark 10:14','Proverbs 29:17'] },
+  { id:'teens', name:'For Teens', emoji:'⭐', family:'For Teens', free:false,
+    verses:['1 Timothy 4:12','Philippians 4:13','Psalm 119:9-11','Proverbs 4:23','Romans 12:2','Galatians 1:10','Proverbs 27:17','1 Corinthians 6:19-20','Psalm 119:11','Ecclesiastes 12:1','Proverbs 3:5-6','Matthew 5:16','James 4:7','Proverbs 13:20','Colossians 3:23','Psalm 25:4-5','Proverbs 16:3','Joshua 1:9','1 Peter 5:6-7','Philippians 4:8'] },
+  { id:'couples', name:'For Couples', emoji:'💞', family:'For Couples', free:false,
+    verses:['1 Corinthians 13:4-7','Ecclesiastes 4:9-12','Song of Solomon 8:7','Colossians 3:14','Genesis 2:24','Ephesians 5:25','Ephesians 5:33','Proverbs 18:22','1 Peter 3:7','Mark 10:9','Ruth 1:16','Proverbs 31:10-11','1 Corinthians 7:3','Song of Solomon 6:3','Malachi 2:14-15','Genesis 2:18','Proverbs 12:4','Colossians 3:19','Hebrews 13:4','Philippians 2:3-4'] },
+];
+const TRIAL_DAYS = 5;
+
+/* ================= State ================= */
+let browseMode = 'family';
+let activeFamilyFilter = 'All';
+let currentPackage = null;
+let currentPlayerVerse = null;
+let repeatTarget = 0;
+let repCount = 0;
+let isPlaying = false;
+let pauseTimer = null;
+let paywallContextPkg = null;
+
+/* ================= Verse text fetching (World English Bible, public domain) ================= */
+const BOOK_IDS = {
+  'genesis':'GEN','exodus':'EXO','leviticus':'LEV','numbers':'NUM','deuteronomy':'DEU','joshua':'JOS','judges':'JDG','ruth':'RUT',
+  '1 samuel':'1SA','2 samuel':'2SA','1 kings':'1KI','2 kings':'2KI','1 chronicles':'1CH','2 chronicles':'2CH','ezra':'EZR','nehemiah':'NEH','esther':'EST',
+  'job':'JOB','psalm':'PSA','psalms':'PSA','proverbs':'PRO','ecclesiastes':'ECC','song of solomon':'SNG','song of songs':'SNG',
+  'isaiah':'ISA','jeremiah':'JER','lamentations':'LAM','ezekiel':'EZK','daniel':'DAN','hosea':'HOS','joel':'JOL','amos':'AMO','obadiah':'OBA',
+  'jonah':'JON','micah':'MIC','nahum':'NAM','habakkuk':'HAB','zephaniah':'ZEP','haggai':'HAG','zechariah':'ZEC','malachi':'MAL',
+  'matthew':'MAT','mark':'MRK','luke':'LUK','john':'JHN','acts':'ACT','romans':'ROM','1 corinthians':'1CO','2 corinthians':'2CO',
+  'galatians':'GAL','ephesians':'EPH','philippians':'PHP','colossians':'COL','1 thessalonians':'1TH','2 thessalonians':'2TH',
+  '1 timothy':'1TI','2 timothy':'2TI','titus':'TIT','philemon':'PHM','hebrews':'HEB','james':'JAS','1 peter':'1PE','2 peter':'2PE',
+  '1 john':'1JN','2 john':'2JN','3 john':'3JN','jude':'JUD','revelation':'REV'
+};
+function parseReference(reference){
+  const m = reference.match(/^(\d?\s?[A-Za-z .]+?)\s+(\d+):(\d+)(?:-(\d+))?/);
+  if(!m) return null;
+  const bookId = BOOK_IDS[m[1].trim().toLowerCase()];
+  if(!bookId) return null;
+  return { bookId, chapter: parseInt(m[2],10), vStart: parseInt(m[3],10), vEnd: m[4] ? parseInt(m[4],10) : parseInt(m[3],10) };
+}
+function flattenVerseContent(content){
+  let out = '';
+  for(const piece of content){
+    if(typeof piece === 'string') out += piece;
+    else if(piece && typeof piece.text === 'string') out += piece.text;
+  }
+  return out;
+}
+async function fetchVerseText(reference){
+  const cacheKey = 'vm_verse_cache_bsb2_' + reference;
+  const cached = safeGet(cacheKey);
+  if(cached) return cached;
+  const parsed = parseReference(reference);
+  if(!parsed) return null;
+  try{
+    const res = await fetch('https://bible.helloao.org/api/BSB/' + parsed.bookId + '/' + parsed.chapter + '.json');
+    if(!res.ok) return null;
+    const data = await res.json();
+    const verses = (data.chapter && data.chapter.content) ? data.chapter.content.filter(c => c.type==='verse' && c.number>=parsed.vStart && c.number<=parsed.vEnd) : [];
+    if(verses.length===0) return null;
+    const text = verses.map(v=>flattenVerseContent(v.content)).join(' ').trim().replace(/\s+/g,' ');
+    if(text){ safeSet(cacheKey, text); return text; }
+    return null;
+  } catch(e){ console.warn('Could not fetch BSB text for', reference, e); return null; }
+}
+
+/* ================= Storage helpers ================= */
+function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){ /* ignore */ } }
+function getList(){ try{ return JSON.parse(localStorage.getItem('vm_list') || '[]'); } catch(e){ return []; } }
+function saveList(list){ safeSet('vm_list', JSON.stringify(list)); }
+function isUnlocked(){ return safeGet('vm_unlocked') === '1'; }
+
+function bumpStreak(){
+  try{
+    const today = new Date().toDateString();
+    const data = JSON.parse(safeGet('vm_streak') || '{"count":0,"last":null}');
+    if(data.last !== today){
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      data.count = (data.last === yesterday) ? data.count + 1 : 1;
+      data.last = today;
+      safeSet('vm_streak', JSON.stringify(data));
+    }
+    document.getElementById('streakCount').textContent = data.count;
+    const dates = JSON.parse(safeGet('vm_activity_dates') || '[]');
+    if(!dates.includes(today)){ dates.push(today); safeSet('vm_activity_dates', JSON.stringify(dates.slice(-30))); }
+  } catch(e){ console.warn('Streak not saved:', e); }
+}
+const MILESTONES = [
+  { key:'first-step', emoji:'🌱', name:'First Step', days:1 },
+  { key:'one-week', emoji:'🌿', name:'One Week', days:7 },
+  { key:'steadfast', emoji:'☀️', name:'Steadfast', days:14 },
+  { key:'full-moon', emoji:'⭐', name:'Full Moon', days:30 },
+  { key:'rooted', emoji:'🌹', name:'Rooted', days:90 },
+  { key:'full-year', emoji:'💎', name:'A Full Year', days:365 },
+];
+function renderGreeting(){
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good morning.' : hour < 17 ? 'Good afternoon.' : 'Good evening.';
+  const dateStr = now.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  const gEl = document.getElementById('homeGreeting');
+  const dEl = document.getElementById('homeDate');
+  if(gEl) gEl.textContent = greeting;
+  if(dEl) dEl.textContent = dateStr;
+}
+function verseOfDayRef(){
+  const pool = PACKAGES.find(p=>p.id==='healing').verses;
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  return pool[dayOfYear % pool.length];
+}
+async function renderVerseOfDay(){
+  const ref = verseOfDayRef();
+  document.getElementById('votdRef').textContent = ref;
+  document.getElementById('votdText').textContent = 'Loading…';
+  const text = await fetchVerseText(ref);
+  document.getElementById('votdText').textContent = text || 'Tap to open — connect once to load this verse.';
+}
+function playVerseOfDay(){ openPlayer(verseOfDayRef()); }
+function renderJourney(){
+  let streak = 0;
+  try{ streak = (JSON.parse(safeGet('vm_streak') || '{"count":0}')).count || 0; } catch(e){}
+  document.getElementById('journeyStreakNum').textContent = streak;
+
+  let dates = [];
+  try{ dates = JSON.parse(safeGet('vm_activity_dates') || '[]'); } catch(e){}
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const now = new Date();
+  const dayIdx = (now.getDay()+6)%7; // Mon=0
+  const monday = new Date(now); monday.setDate(now.getDate()-dayIdx);
+  const strip = document.getElementById('weekStrip');
+  strip.innerHTML = labels.map((lbl,i)=>{
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    const done = dates.includes(d.toDateString());
+    const isToday = d.toDateString()===now.toDateString();
+    const cls = done ? 'done' : (isToday ? 'today' : '');
+    const content = done ? '✓' : (isToday ? d.getDate() : '');
+    return `<div class="day-dot"><div class="dlabel">${lbl}</div><div class="dcircle ${cls}">${content}</div></div>`;
+  }).join('');
+
+  const grid = document.getElementById('badgeGrid');
+  grid.innerHTML = MILESTONES.map(m=>{
+    const earned = streak >= m.days;
+    const req = earned ? (m.days+(m.days===1?' day — earned':' days — earned')) : (m.days+' days');
+    return `<div class="badge-card ${earned?'':'locked'}"><div class="badge-icon">${m.emoji}</div><div class="badge-name">${m.name}</div><div class="badge-req">${req}</div></div>`;
+  }).join('');
+}
+function formatTime12h(t){
+  if(!t || t==='off') return 'Off';
+  const [h,m] = t.split(':').map(Number);
+  const period = h>=12 ? 'PM' : 'AM';
+  const h12 = ((h+11)%12)+1;
+  return h12 + ':' + String(m).padStart(2,'0') + ' ' + period + ' daily';
+}
+function deviceSupportsReminders(){
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  if(isIOS){
+    const m = ua.match(/OS (\d+)_(\d+)/);
+    if(!m) return false; // can't confirm version — treat as unsupported rather than risk a false promise
+    const major = parseInt(m[1],10), minor = parseInt(m[2],10);
+    return (major > 16) || (major===16 && minor>=4);
+  }
+  return ('Notification' in window); // Android / other browsers with notification support
+}
+function renderReminderAvailability(){
+  const supported = deviceSupportsReminders();
+  const supEl = document.getElementById('reminderSupported');
+  const unsupEl = document.getElementById('reminderUnsupported');
+  if(supEl) supEl.style.display = supported ? '' : 'none';
+  if(unsupEl) unsupEl.style.display = supported ? 'none' : '';
+}
+function setReminderTime(t){
+  safeSet('vm_reminder', t);
+  refreshReminderLabel();
+}
+function refreshReminderLabel(){
+  const t = safeGet('vm_reminder');
+  const label1 = document.getElementById('reminderSubLabel');
+  const label2 = document.getElementById('reminderStatusLabel');
+  const text = deviceSupportsReminders() ? (t ? formatTime12h(t) : 'Not set') : 'Not available on this device';
+  if(label1) label1.textContent = text;
+  if(label2) label2.textContent = text;
+  const input = document.getElementById('reminderTimeInput');
+  if(input && t && t!=='off') input.value = t;
+}
+function toggleShowText(checked){
+  safeSet('vm_show_text', checked ? '1' : '0');
+  document.getElementById('playerText').style.visibility = checked ? 'visible' : 'hidden';
+}
+async function prefetchHealing(){
+  const healing = PACKAGES.find(p=>p.id==='healing');
+  for(const ref of healing.verses){ await fetchVerseText(ref); }
+}
+function isPackageCached(pkg){
+  return pkg.verses.every(ref => !!safeGet('vm_verse_cache_bsb2_' + ref));
+}
+async function downloadPackageOffline(pkgId){
+  const pkg = PACKAGES.find(p=>p.id===pkgId);
+  if(!pkg) return;
+  const btn = document.getElementById('downloadPkgBtn');
+  if(btn) btn.textContent = 'Downloading…';
+  for(const ref of pkg.verses){ await fetchVerseText(ref); }
+  if(btn) btn.textContent = '✓ Available offline';
+}
+function trialDaysLeft(pkgId){
+  const key = 'vm_trial_' + pkgId;
+  let first = safeGet(key);
+  if(!first){ first = Date.now().toString(); safeSet(key, first); }
+  const elapsedDays = Math.floor((Date.now() - parseInt(first,10)) / 86400000);
+  return Math.max(0, TRIAL_DAYS - elapsedDays);
+}
+function packageAccess(pkg){
+  if(pkg.free || isUnlocked()) return 'open';
+  return trialDaysLeft(pkg.id) > 0 ? 'trial' : 'locked';
+}
+
+/* ================= Navigation ================= */
+function go(screen){
+  stopSpeaking();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===screen));
+  window.scrollTo(0,0);
+  if(screen==='browse') renderPackages();
+  if(screen==='mylist') renderMyList();
+  if(screen==='journey') renderJourney();
+  if(screen==='settings'){ refreshReminderLabel(); renderReminderAvailability(); }
+  if(screen==='home'){ refreshHomeCounts(); renderGreeting(); renderVerseOfDay(); }
+}
+function stopAndBack(){ stopSpeaking(); go(currentPackage ? 'package' : 'home'); }
+
+/* ================= Browse / Packages ================= */
+function setBrowseMode(mode){
+  browseMode = mode;
+  document.getElementById('tabFamily').classList.toggle('active', mode==='family');
+  document.getElementById('tabAll').classList.toggle('active', mode==='all');
+  document.getElementById('filterRow').style.display = mode==='all' ? 'flex' : 'none';
+  renderPackages();
+}
+function renderFilterChips(){
+  const families = ['All', ...new Set(PACKAGES.map(p=>p.family))];
+  const row = document.getElementById('filterRow');
+  row.innerHTML = families.map(f=>`<div class="filter-chip ${f===activeFamilyFilter?'active':''}" onclick="setFamilyFilter('${f}')">${f}</div>`).join('');
+}
+function setFamilyFilter(f){ activeFamilyFilter = f; renderPackages(); }
+
+function badgeFor(pkg){
+  const access = packageAccess(pkg);
+  if(pkg.free) return '<div class="pkg-badge badge-free">Free</div>';
+  if(isUnlocked()) return '<div class="pkg-badge badge-unlocked">Unlocked</div>';
+  if(access==='trial') return `<div class="pkg-badge badge-trial">${trialDaysLeft(pkg.id)}d trial left</div>`;
+  return '<div class="pkg-badge badge-locked">Locked</div>';
+}
+function pkgSpineHTML(pkg){
+  return `<div class="pkg-spine" onclick="openPackage('${pkg.id}')">
+      <div class="pkg-emoji">${pkg.emoji}</div>
+      <div><div class="pkg-name">${pkg.name}</div><div class="pkg-meta">${pkg.verses.length} verses</div></div>
+      ${badgeFor(pkg)}
+    </div>`;
+}
+function renderPackages(){
+  const wrap = document.getElementById('pkgList');
+  if(browseMode==='family'){
+    const families = [...new Set(PACKAGES.map(p=>p.family))];
+    wrap.innerHTML = families.map(fam => {
+      const pkgs = PACKAGES.filter(p=>p.family===fam);
+      return `<div class="fam-header">${fam}</div>` + pkgs.map(pkgSpineHTML).join('');
+    }).join('');
+  } else {
+    renderFilterChips();
+    const pkgs = activeFamilyFilter==='All' ? PACKAGES : PACKAGES.filter(p=>p.family===activeFamilyFilter);
+    wrap.innerHTML = pkgs.map(pkgSpineHTML).join('');
+  }
+}
+function openPackage(id){
+  const pkg = PACKAGES.find(p=>p.id===id);
+  currentPackage = pkg;
+  const access = packageAccess(pkg);
+  document.getElementById('pkgTitle').textContent = pkg.name;
+  document.getElementById('pkgSub').textContent = access==='locked' ? 'Trial ended — unlock to continue' : (pkg.verses.length + ' verses · tap to loop');
+  const wrap = document.getElementById('pkgVerseList');
+  const loopBtn = document.getElementById('loopPkgBtn');
+  const dlBtn = document.getElementById('downloadPkgBtn');
+  if(access==='locked'){
+    wrap.innerHTML = `<div class="empty-state"><div class="em">🔒</div>Your trial for this package has ended.<br><button class="btn btn-primary" style="margin-top:16px;" onclick="openPaywall('${pkg.id}')">Unlock all packages</button></div>`;
+    if(loopBtn) loopBtn.style.display = 'none';
+    if(dlBtn) dlBtn.style.display = 'none';
+  } else {
+    if(loopBtn) loopBtn.style.display = '';
+    if(dlBtn){ dlBtn.style.display = ''; dlBtn.textContent = isPackageCached(pkg) ? '✓ Available offline' : '⬇︎'; }
+    wrap.innerHTML = pkg.verses.map(ref => `
+      <div class="verse-card" onclick="openPlayerFromPackage('${escapeAttr(ref)}')">
+        <div class="verse-ref">${ref}</div>
+        ${access==='trial' ? `<div class="verse-lock">${trialDaysLeft(pkg.id)} day(s) left in trial</div>` : ''}
+      </div>`).join('');
+  }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-package').classList.add('active');
+  window.scrollTo(0,0);
+}
+function escapeAttr(s){ return s.replace(/'/g, "\\'"); }
+
+/* ================= Paywall ================= */
+// EDIT THESE before publishing: paste your real Selar and Gumroad product links,
+// plus your Supabase project URL and public anon key (Supabase dashboard → Settings → API).
+// The anon key is meant to be public — it only allows what your database rules permit,
+// and the unlock_codes table itself is locked down so this key can never read it directly.
+const SELAR_URL = 'https://selar.co/REPLACE-WITH-YOUR-PRODUCT-LINK';
+const GUMROAD_URL = 'https://REPLACE.gumroad.com/l/REPLACE-WITH-YOUR-PRODUCT';
+const SUPABASE_URL = 'https://REPLACE-YOUR-PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'REPLACE-WITH-YOUR-ANON-PUBLIC-KEY';
+
+function openPaywall(pkgId){
+  paywallContextPkg = pkgId;
+  document.getElementById('unlockCodeInput').value = '';
+  document.getElementById('unlockError').style.display = 'none';
+  document.getElementById('sheetOverlay').classList.add('active');
+}
+function closePaywall(){ document.getElementById('sheetOverlay').classList.remove('active'); }
+async function redeemCode(){
+  const input = document.getElementById('unlockCodeInput');
+  const errEl = document.getElementById('unlockError');
+  const btn = event.target;
+  const code = input.value.trim().toUpperCase();
+  if(!code){ errEl.textContent = 'Enter the code from your Selar or Gumroad receipt.'; errEl.style.display='block'; return; }
+  const original = btn.textContent;
+  btn.textContent = 'Checking…';
+  btn.disabled = true;
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/redeem_code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ input_code: code })
+    });
+    const ok = await res.json();
+    if(ok === true){
+      safeSet('vm_unlocked', '1');
+      errEl.style.display = 'none';
+      closePaywall();
+      document.getElementById('unlockTitle').textContent = 'All packages unlocked ✓';
+      renderPackages();
+      if(currentPackage) openPackage(currentPackage.id);
+    } else {
+      errEl.textContent = "That code doesn't look right, or it's already been used — check your receipt, or contact support.";
+      errEl.style.display = 'block';
+    }
+  } catch(e){
+    console.warn('Redeem check failed:', e);
+    errEl.textContent = "Couldn't reach the server — check your connection and try again.";
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+}
+
+/* ================= Player ================= */
+let isMuted = false;
+let playQueue = null;   // array of {ref,text} when looping a whole package, else null
+let queueIndex = 0;
+let packageCycles = 0;
+let navContext = null;  // { items: [...], index } — lets the player skip to the next scripture
+
+function updateNextButtonVisibility(){
+  const btn = document.getElementById('nextBtn');
+  if(!btn) return;
+  const hasNext = navContext && navContext.index < navContext.items.length - 1;
+  btn.style.display = hasNext ? '' : 'none';
+}
+function nextInContext(){
+  if(!navContext || navContext.index >= navContext.items.length - 1) return;
+  navContext.index++;
+  const wasPlaying = isPlaying;
+  const ctx = navContext; // openPlayer/openPlayerCustom below will reuse the same object
+  if(ctx.type === 'package'){
+    openPlayer(ctx.items[ctx.index], ctx).then(()=>{ if(wasPlaying) startPlaying(); });
+  } else {
+    const item = ctx.items[ctx.index];
+    openPlayerCustom(item.ref, item.text, ctx);
+    if(wasPlaying) startPlaying();
+  }
+}
+function startPlaying(){
+  if(!currentPlayerVerse || !currentPlayerVerse.text) return;
+  isPlaying = true;
+  document.getElementById('playBtn').textContent = '❚❚';
+  setRings(true);
+  speakLoop();
+}
+
+function resetPlayerUI(){
+  repCount = 0; packageCycles = 0; queueIndex = 0; playQueue = null;
+  document.getElementById('repCountLabel').textContent = 'Rep 0';
+  isPlaying = false;
+  document.getElementById('playBtn').textContent = '▶';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-player').classList.add('active');
+  window.scrollTo(0,0);
+  bumpStreak();
+}
+async function openPlayer(ref, context){
+  resetPlayerUI();
+  navContext = context || null;
+  updateNextButtonVisibility();
+  currentPlayerVerse = { ref, text: null, source:'WEB' };
+  document.getElementById('playerRef').textContent = ref;
+  document.getElementById('playerText').innerHTML = '<span class="loading-dots">Loading scripture…</span>';
+  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain';
+
+  const text = await fetchVerseText(ref);
+  if(text){
+    currentPlayerVerse.text = text;
+    document.getElementById('playerText').textContent = text;
+  } else {
+    document.getElementById('playerText').innerHTML = '<span class="loading-dots">Could not load this verse — check your connection and try again.</span>';
+  }
+}
+function openPlayerFromPackage(ref){
+  const idx = currentPackage.verses.indexOf(ref);
+  openPlayer(ref, { type:'package', items: currentPackage.verses, index: idx });
+}
+function openPlayerCustom(ref, text, context){
+  resetPlayerUI();
+  navContext = context || null;
+  updateNextButtonVisibility();
+  currentPlayerVerse = { ref, text, source:'custom' };
+  document.getElementById('playerRef').textContent = ref;
+  document.getElementById('playerText').textContent = text;
+  document.getElementById('translationNote').textContent = '';
+}
+function openPlayerFromList(id){
+  const list = getList();
+  const idx = list.findIndex(i=>i.id===id);
+  if(idx===-1) return;
+  openPlayerCustom(list[idx].ref, list[idx].text, { type:'mylist', items: list, index: idx });
+}
+async function loopWholePackage(){
+  if(!currentPackage) return;
+  resetPlayerUI();
+  navContext = null;
+  updateNextButtonVisibility();
+  document.getElementById('playerRef').textContent = currentPackage.name;
+  document.getElementById('playerText').innerHTML = '<span class="loading-dots">Loading ' + currentPackage.verses.length + ' verses…</span>';
+  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-player').classList.add('active');
+  window.scrollTo(0,0);
+  const items = [];
+  for(const ref of currentPackage.verses){
+    const text = await fetchVerseText(ref);
+    if(text) items.push({ ref, text, source:'WEB' });
+  }
+  if(items.length===0){ document.getElementById('playerText').textContent = 'Could not load this package — check your connection and try again.'; return; }
+  playQueue = items;
+  queueIndex = 0;
+  currentPlayerVerse = playQueue[0];
+  document.getElementById('playerRef').textContent = currentPlayerVerse.ref;
+  document.getElementById('playerText').textContent = currentPlayerVerse.text;
+  bumpStreak();
+  isPlaying = true;
+  document.getElementById('playBtn').textContent = '❚❚';
+  setRings(true);
+  speakLoop();
+}
+function setRepeatChoice(el){
+  document.querySelectorAll('.repeat-choice').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  repeatTarget = parseInt(el.dataset.val, 10);
+}
+function toggleMute(){
+  isMuted = !isMuted;
+  document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+  if(isMuted && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+function togglePlay(){
+  if(!currentPlayerVerse || !currentPlayerVerse.text){ return; }
+  if(isPlaying){ stopSpeaking(); }
+  else { isPlaying = true; document.getElementById('playBtn').textContent='❚❚'; setRings(true); speakLoop(); }
+}
+function stopSpeaking(){
+  isPlaying = false;
+  clearTimeout(pauseTimer);
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  const btn = document.getElementById('playBtn');
+  if(btn) btn.textContent = '▶';
+  setRings(false);
+}
+function setRings(on){ ['ring1','ring2','ring3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.toggle('pulse', on); }); }
+
+let speechRate = 0.95;
+function onPaceChange(v){
+  speechRate = parseFloat(v);
+  safeSet('vm_pace', v);
+  const label = speechRate < 0.85 ? 'Slower' : speechRate > 1.05 ? 'Faster' : 'Normal';
+  document.getElementById('paceVal').textContent = label;
+}
+function speakItem(item){
+  return new Promise((resolve)=>{
+    if(isMuted || !('speechSynthesis' in window)){
+      const dur = Math.min(9000, Math.max(2500, item.text.length * 45));
+      pauseTimer = setTimeout(resolve, dur);
+      return;
+    }
+    const refUtter = new SpeechSynthesisUtterance(item.ref + '.');
+    refUtter.rate = speechRate;
+    refUtter.onend = ()=>{
+      if(!isPlaying){ resolve(); return; }
+      const textUtter = new SpeechSynthesisUtterance(item.text);
+      textUtter.rate = speechRate;
+      textUtter.onend = resolve;
+      window.speechSynthesis.speak(textUtter);
+    };
+    window.speechSynthesis.speak(refUtter);
+  });
+}
+async function speakLoop(){
+  if(!isPlaying) return;
+  const item = playQueue ? playQueue[queueIndex] : currentPlayerVerse;
+  if(!item || !item.text){ stopSpeaking(); return; }
+
+  document.getElementById('playerRef').textContent = item.ref;
+  document.getElementById('playerText').textContent = item.text;
+  currentPlayerVerse = item;
+
+  await speakItem(item);
+  if(!isPlaying) return;
+
+  if(playQueue){
+    queueIndex++;
+    if(queueIndex >= playQueue.length){
+      queueIndex = 0;
+      packageCycles++;
+      document.getElementById('repCountLabel').textContent = 'Pass ' + packageCycles;
+      if(repeatTarget !== 0 && packageCycles >= repeatTarget){ stopSpeaking(); return; }
+    }
+  } else {
+    repCount++;
+    document.getElementById('repCountLabel').textContent = 'Rep ' + repCount;
+    if(repeatTarget !== 0 && repCount >= repeatTarget){ stopSpeaking(); return; }
+  }
+  const pause = parseInt(document.getElementById('pauseRange').value, 10) * 1000;
+  pauseTimer = setTimeout(speakLoop, pause);
+}
+function addCurrentToList(){
+  if(!currentPlayerVerse || !currentPlayerVerse.text) return;
+  const list = getList();
+  list.unshift({ id: Date.now()+'', ref: currentPlayerVerse.ref, text: currentPlayerVerse.text });
+  saveList(list);
+  refreshHomeCounts();
+  const btn = event.target;
+  const original = btn.textContent;
+  btn.textContent = 'Saved ✓';
+  setTimeout(()=>{ btn.textContent = original; }, 1200);
+}
+
+/* ================= Add own ================= */
+function setAddOwnMode(mode){
+  document.getElementById('tabByRef').classList.toggle('active', mode==='ref');
+  document.getElementById('tabByText').classList.toggle('active', mode==='text');
+  document.getElementById('addByRef').style.display = mode==='ref' ? '' : 'none';
+  document.getElementById('addByText').style.display = mode==='text' ? '' : 'none';
+}
+async function lookupAndPlay(){
+  const ref = document.getElementById('quickRef').value.trim();
+  if(!ref){ alert('Type a reference first, e.g. Jeremiah 17:14'); return; }
+  const parsed = parseReference(ref);
+  if(!parsed){ alert('Could not recognize that reference. Try a format like "Jeremiah 17:14" or "Psalm 91:1-7".'); return; }
+  document.getElementById('quickRef').value = '';
+  await openPlayer(ref);
+  if(currentPlayerVerse && currentPlayerVerse.text){
+    const list = getList();
+    list.unshift({ id: Date.now()+'', ref, text: currentPlayerVerse.text });
+    saveList(list);
+    refreshHomeCounts();
+  }
+}
+function saveOwnAndPlay(){
+  const ref = document.getElementById('ownRef').value.trim() || 'My Verse';
+  const text = document.getElementById('ownText').value.trim();
+  if(!text){ alert('Paste or type a verse first.'); return; }
+  const list = getList();
+  list.unshift({ id: Date.now()+'', ref, text });
+  saveList(list);
+  document.getElementById('ownRef').value=''; document.getElementById('ownText').value='';
+  openPlayerCustom(ref, text);
+}
+
+/* ================= My List ================= */
+function renderMyList(){
+  const list = getList();
+  document.getElementById('mylistSub').textContent = list.length + (list.length===1?' verse saved':' verses saved');
+  const wrap = document.getElementById('mylistContent');
+  if(list.length===0){ wrap.innerHTML = `<div class="empty-state"><div class="em">🕯️</div>Nothing saved yet.<br>Browse packages or add your own to build your list.</div>`; return; }
+  wrap.innerHTML='';
+  list.forEach(item=>{
+    const el = document.createElement('div');
+    el.className='list-item';
+    el.innerHTML = `<div style="flex:1; cursor:pointer;" onclick="openPlayerFromList('${item.id}')">
+        <div class="li-ref">${item.ref}</div>
+        <div class="li-text">${item.text.length>110? item.text.slice(0,110)+'…' : item.text}</div>
+      </div>
+      <div><button class="icon-btn" onclick="removeFromList('${item.id}')">✕</button></div>`;
+    wrap.appendChild(el);
+  });
+}
+function removeFromList(id){ saveList(getList().filter(i=>i.id!==id)); renderMyList(); refreshHomeCounts(); }
+function refreshHomeCounts(){
+  const n = getList().length;
+  document.getElementById('mylistCountLabel').textContent = n + (n===1 ? ' verse saved' : ' verses saved');
+  document.getElementById('unlockTitle').textContent = isUnlocked() ? 'All packages unlocked ✓' : 'Unlock all packages';
+}
+
+/* ================= PDF export ================= */
+function exportPDF(){
+  const list = getList();
+  if(list.length===0){ alert('Save a few verses to your list first.'); return; }
+  document.getElementById('printDate').textContent = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('printContent').innerHTML = list.map(v=>`<div class="p-verse"><div class="p-ref">${v.ref}</div>${v.text}</div>`).join('');
+  window.print();
+}
+
+/* ================= Init ================= */
+window.addEventListener('error', function(e){ console.error('App error:', e.message, 'at line', e.lineno); });
+(function init(){
+  try{
+    const data = JSON.parse(safeGet('vm_streak') || '{"count":0,"last":null}');
+    document.getElementById('streakCount').textContent = data.count || 0;
+  } catch(e){}
+  refreshHomeCounts();
+  renderGreeting();
+  renderVerseOfDay();
+  refreshReminderLabel();
+  renderReminderAvailability();
+  prefetchHealing();
+  const selarEl = document.getElementById('selarLink');
+  const gumroadEl = document.getElementById('gumroadLink');
+  if(selarEl) selarEl.href = SELAR_URL;
+  if(gumroadEl) gumroadEl.href = GUMROAD_URL;
+  const savedPace = safeGet('vm_pace');
+  if(savedPace){
+    speechRate = parseFloat(savedPace);
+    const paceInput = document.getElementById('paceRange');
+    if(paceInput) paceInput.value = savedPace;
+    const label = speechRate < 0.85 ? 'Slower' : speechRate > 1.05 ? 'Faster' : 'Normal';
+    const paceLabel = document.getElementById('paceVal');
+    if(paceLabel) paceLabel.textContent = label;
+  }
+  const showText = safeGet('vm_show_text');
+  const showTextToggle = document.getElementById('showTextToggle');
+  if(showText === '0'){
+    if(showTextToggle) showTextToggle.checked = false;
+    document.getElementById('playerText').style.visibility = 'hidden';
+  }
+})();
+</script>
+</body>
+</html>
