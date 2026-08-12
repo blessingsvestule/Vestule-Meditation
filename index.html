@@ -11,6 +11,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Vestule">
+<meta property="og:title" content="Vestule Meditation">
+<meta property="og:description" content="Loop scripture. Stay in the Word.">
+<meta property="og:image" content="icon-512.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Vestule Meditation">
+<meta name="twitter:description" content="Loop scripture. Stay in the Word.">
+<meta name="twitter:image" content="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -182,11 +190,21 @@
   @media print{
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
-    #printArea{ display:block; position:absolute; left:0; top:0; width:100%; background:#fff; color:#1b1b1b; padding:40px; }
-    .p-verse{ font-family:Georgia, serif; font-size:16px; line-height:1.7; border-bottom:1px solid #ddd; padding:18px 0; }
-    .p-ref{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#a07a2d; font-weight:700; margin-bottom:6px; }
-    .p-title{ font-family:Georgia, serif; font-size:24px; margin-bottom:6px; }
-    .p-sub{ font-size:12px; color:#888; margin-bottom:26px; }
+    #printArea{
+      display:block; position:absolute; left:0; top:0; width:100%;
+      background:#F7F2E6; color:#22201A; padding:56px 50px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    .p-frame{ border:2px solid #B7893D; padding:36px 34px; position:relative; }
+    .p-frame::before{ content:""; position:absolute; inset:8px; border:1px solid #D9C08F; pointer-events:none; }
+    .p-eyebrow{ text-align:center; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:#8B6A2F; margin-bottom:10px; font-family: Georgia, serif; }
+    .p-title{ font-family:Georgia, serif; font-weight:normal; font-size:30px; text-align:center; color:#1D2A38; margin-bottom:6px; letter-spacing:.3px; }
+    .p-ornament{ text-align:center; color:#B7893D; font-size:16px; margin:10px 0 22px; letter-spacing:6px; }
+    .p-sub{ font-size:11.5px; color:#8a8272; margin-bottom:30px; text-align:center; }
+    .p-verse{ font-size:16px; line-height:1.75; padding:22px 0; border-bottom:1px solid #DCD0AF; }
+    .p-verse:last-child{ border-bottom:none; }
+    .p-ref{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#A6782F; font-weight:bold; margin-bottom:8px; font-family: Georgia, serif; }
+    .p-footer{ text-align:center; margin-top:30px; font-size:10.5px; color:#a39a86; letter-spacing:.08em; text-transform:uppercase; }
   }
 </style>
 </head>
@@ -292,7 +310,7 @@
     </div>
 
     <div class="field-label">Downloads</div>
-    <div class="note-box" style="margin-top:0;">Each package you open caches its verses on your device automatically, so it works without internet the next time. Healing is pre-loaded the moment you open the app, since it's free for everyone. Use "Download for offline" on any package screen to cache it ahead of time.</div>
+    <div class="note-box" style="margin-top:0;">Each package you open caches its verses on your device automatically, so it works without internet the next time. New Believer and Healing are pre-loaded the moment you open the app, since they're free for everyone. Use "Download for offline" on any package screen to cache the others ahead of time.</div>
   </div>
 
 
@@ -398,7 +416,11 @@
       <div><div class="section-title">My Loop List</div><div class="section-sub" id="mylistSub">Your saved verses</div></div>
     </div>
     <div id="mylistContent"></div>
-    <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="exportPDF()">🖨️ Export as PDF</button>
+    <div style="display:flex; gap:10px; margin-top:14px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="exportPDF()">🖨️ PDF</button>
+      <button class="btn btn-ghost" style="flex:1;" onclick="shareList()">📤 Share</button>
+      <button class="btn btn-ghost" style="flex:1;" onclick="emailList()">✉️ Email</button>
+    </div>
   </div>
 
   <div class="bottom-nav">
@@ -414,8 +436,7 @@
 <div class="sheet-overlay" id="sheetOverlay" onclick="if(event.target===this) closePaywall()">
   <div class="sheet">
     <div class="sheet-title" id="sheetTitle">Unlock everything</div>
-    <div class="price-tag">₦1,500</div>
-    <div class="sheet-body" id="sheetBody">One payment unlocks every package — New Believer and Healing stay free either way. Get full access on Selar or Gumroad, then enter your code below to unlock it right here.</div>
+    <div class="sheet-body" id="sheetBody" style="margin-top:6px;">One payment unlocks every package — New Believer and Healing stay free either way. See current pricing and buy on Selar or Gumroad, then enter your code below to unlock it right here.</div>
     <div style="display:flex; gap:10px; margin-bottom:14px;">
       <a class="btn btn-ghost" style="flex:1; text-align:center; text-decoration:none;" id="selarLink" href="#" target="_blank" rel="noopener">Buy on Selar</a>
       <a class="btn btn-ghost" style="flex:1; text-align:center; text-decoration:none;" id="gumroadLink" href="#" target="_blank" rel="noopener">Buy on Gumroad</a>
@@ -429,9 +450,14 @@
 </div>
 
 <div id="printArea">
-  <div class="p-title">My Loop List</div>
-  <div class="p-sub" id="printDate"></div>
-  <div id="printContent"></div>
+  <div class="p-frame">
+    <div class="p-eyebrow">Vestule Meditation</div>
+    <div class="p-title">My Loop List</div>
+    <div class="p-ornament">✦</div>
+    <div class="p-sub" id="printDate"></div>
+    <div id="printContent"></div>
+    <div class="p-footer">Scripture — Berean Standard Bible</div>
+  </div>
 </div>
 
 <script>
@@ -639,8 +665,10 @@ function toggleShowText(checked){
   document.getElementById('playerText').style.visibility = checked ? 'visible' : 'hidden';
 }
 async function prefetchHealing(){
-  const healing = PACKAGES.find(p=>p.id==='healing');
-  for(const ref of healing.verses){ await fetchVerseText(ref); }
+  const freePackages = PACKAGES.filter(p => p.free);
+  for(const pkg of freePackages){
+    for(const ref of pkg.verses){ await fetchVerseText(ref); }
+  }
 }
 function isPackageCached(pkg){
   return pkg.verses.every(ref => !!safeGet('vm_verse_cache_bsb2_' + ref));
@@ -758,8 +786,8 @@ function escapeAttr(s){ return s.replace(/'/g, "\\'"); }
 // and the unlock_codes table itself is locked down so this key can never read it directly.
 const SELAR_URL = 'https://selar.co/REPLACE-WITH-YOUR-PRODUCT-LINK';
 const GUMROAD_URL = 'https://REPLACE.gumroad.com/l/REPLACE-WITH-YOUR-PRODUCT';
-const SUPABASE_URL = 'https://nqufzhiadvqdnuoolhwi.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_--bAGFXbwzQUY4fXQM--Zg_ahVCvLbC';
+const SUPABASE_URL = 'https://REPLACE-YOUR-PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'REPLACE-WITH-YOUR-ANON-PUBLIC-KEY';
 
 function openPaywall(pkgId){
   paywallContextPkg = pkgId;
@@ -1072,6 +1100,30 @@ function exportPDF(){
   document.getElementById('printDate').textContent = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
   document.getElementById('printContent').innerHTML = list.map(v=>`<div class="p-verse"><div class="p-ref">${v.ref}</div>${v.text}</div>`).join('');
   window.print();
+}
+function listAsText(){
+  const list = getList();
+  const lines = list.map(v => v.ref + '\n' + v.text);
+  return 'My Loop List — Vestule Meditation\n\n' + lines.join('\n\n') + '\n\n— Sent from Vestule Meditation';
+}
+async function shareList(){
+  const list = getList();
+  if(list.length===0){ alert('Save a few verses to your list first.'); return; }
+  const text = listAsText();
+  if(navigator.share){
+    try{ await navigator.share({ title: 'My Loop List — Vestule Meditation', text }); }
+    catch(e){ /* user cancelled — no action needed */ }
+  } else {
+    try{ await navigator.clipboard.writeText(text); alert('Sharing isn\'t available in this browser — copied your list instead, ready to paste anywhere.'); }
+    catch(e){ alert('Could not share or copy automatically. Try Export as PDF instead.'); }
+  }
+}
+function emailList(){
+  const list = getList();
+  if(list.length===0){ alert('Save a few verses to your list first.'); return; }
+  const subject = encodeURIComponent('My Loop List — Vestule Meditation');
+  const body = encodeURIComponent(listAsText());
+  window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
 }
 
 /* ================= Init ================= */
