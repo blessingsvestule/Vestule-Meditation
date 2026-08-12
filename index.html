@@ -196,6 +196,20 @@
     <div class="streak-pill">🔥 <span id="streakCount">0</span> day streak</div>
   </div>
 
+  <div id="installBanner" style="display:none; margin:14px 22px 0; padding:14px 16px; border-radius:14px; background:rgba(200,137,63,0.1); border:1px solid rgba(200,137,63,0.3);">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="font-size:22px;">📲</div>
+      <div style="flex:1;">
+        <div style="font-weight:700; font-size:13.5px; color:var(--amber-soft);" id="installBannerTitle">Add Vestule Meditation to your home screen</div>
+        <div style="font-size:12px; color:var(--parchment-dim); margin-top:2px;" id="installBannerSub">One tap for full-screen, app-like access anytime.</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn btn-primary btn-sm" style="flex:1;" id="installActionBtn" onclick="handleInstallAction()">Install</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="dismissInstallBanner()">Not now</button>
+    </div>
+  </div>
+
   <!-- HOME -->
   <div class="screen active" id="screen-home">
     <div class="greeting" id="homeGreeting">Good morning.</div>
@@ -1073,7 +1087,8 @@ function exportPDF(){
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const margin = 46;
+  const borderInset = 18;
+  const margin = 54;
   const contentW = pageW - margin * 2;
 
   const ink = [16, 21, 28];
@@ -1085,27 +1100,34 @@ function exportPDF(){
   function newPageBackground(){
     doc.setFillColor(ink[0], ink[1], ink[2]);
     doc.rect(0, 0, pageW, pageH, 'F');
+    // thick gold border framing the page
+    doc.setDrawColor(gold[0], gold[1], gold[2]);
+    doc.setLineWidth(3.5);
+    doc.rect(borderInset, borderInset, pageW - borderInset*2, pageH - borderInset*2);
+    doc.setDrawColor(goldSoft[0], goldSoft[1], goldSoft[2]);
+    doc.setLineWidth(0.75);
+    doc.rect(borderInset + 7, borderInset + 7, pageW - (borderInset+7)*2, pageH - (borderInset+7)*2);
   }
   function drawHeader(){
     doc.setTextColor(goldSoft[0], goldSoft[1], goldSoft[2]);
     doc.setFont('times', 'normal');
     doc.setFontSize(10);
-    doc.text('VESTULE MEDITATION', pageW / 2, 56, { align: 'center' });
+    doc.text('VESTULE MEDITATION', pageW / 2, 66, { align: 'center' });
     doc.setTextColor(parchment[0], parchment[1], parchment[2]);
     doc.setFontSize(24);
-    doc.text('My List', pageW / 2, 84, { align: 'center' });
+    doc.text('My List', pageW / 2, 94, { align: 'center' });
     doc.setDrawColor(gold[0], gold[1], gold[2]);
     doc.setLineWidth(0.75);
-    doc.line(pageW/2 - 60, 96, pageW/2 + 60, 96);
+    doc.line(pageW/2 - 60, 106, pageW/2 + 60, 106);
     doc.setTextColor(parchmentDim[0], parchmentDim[1], parchmentDim[2]);
     doc.setFontSize(9);
     const dateStr = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
-    doc.text(dateStr, pageW / 2, 112, { align: 'center' });
+    doc.text(dateStr, pageW / 2, 122, { align: 'center' });
   }
 
   newPageBackground();
   drawHeader();
-  let y = 150;
+  let y = 160;
 
   list.forEach((v) => {
     doc.setFont('times', 'bold');
@@ -1116,10 +1138,10 @@ function exportPDF(){
     const bodyLines = doc.splitTextToSize(v.text, contentW);
     const blockHeight = (refLines.length * 14) + 10 + (bodyLines.length * 19) + 28;
 
-    if(y + blockHeight > pageH - 60){
+    if(y + blockHeight > pageH - 70){
       doc.addPage();
       newPageBackground();
-      y = 70;
+      y = 80;
     }
 
     doc.setTextColor(gold[0], gold[1], gold[2]);
@@ -1140,7 +1162,12 @@ function exportPDF(){
     y += 24;
   });
 
-  doc.save('vestule-meditation-my-list.pdf');
+  const blobUrl = doc.output('bloburl');
+  const opened = window.open(blobUrl, '_blank');
+  if(!opened){
+    // popup blocked — fall back to a direct download so the user still gets it
+    doc.save('vestule-meditation-my-list.pdf');
+  }
 }
 function listAsText(){
   const list = getList();
@@ -1168,6 +1195,54 @@ function emailList(){
 }
 
 /* ================= Init ================= */
+/* ================= Install prompt ================= */
+let deferredInstallPrompt = null;
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  maybeShowInstallBanner();
+});
+function maybeShowInstallBanner(){
+  if(isStandalone()) return; // already installed, nothing to prompt
+  if(safeGet('vm_install_dismissed') === '1') return;
+  const banner = document.getElementById('installBanner');
+  if(!banner) return;
+  if(deferredInstallPrompt){
+    document.getElementById('installBannerTitle').textContent = 'Add Vestule Meditation to your home screen';
+    document.getElementById('installBannerSub').textContent = 'One tap for full-screen, app-like access anytime.';
+    document.getElementById('installActionBtn').textContent = 'Install';
+    banner.style.display = 'block';
+  } else if(isIOS()){
+    document.getElementById('installBannerTitle').textContent = 'Add to your home screen';
+    document.getElementById('installBannerSub').textContent = 'Tap the Share icon below, then "Add to Home Screen."';
+    document.getElementById('installActionBtn').textContent = 'Show me how';
+    banner.style.display = 'block';
+  }
+  // Android/desktop browsers without beforeinstallprompt support simply won't show a banner —
+  // there's no reliable install path to offer there.
+}
+async function handleInstallAction(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    document.getElementById('installBanner').style.display = 'none';
+    if(choice.outcome !== 'accepted') safeSet('vm_install_dismissed', '1');
+  } else if(isIOS()){
+    alert('Tap the Share icon (square with an arrow) at the bottom of your browser, then scroll down and tap "Add to Home Screen."');
+  }
+}
+function dismissInstallBanner(){
+  safeSet('vm_install_dismissed', '1');
+  document.getElementById('installBanner').style.display = 'none';
+}
+
 window.addEventListener('error', function(e){ console.error('App error:', e.message, 'at line', e.lineno); });
 (function init(){
   try{
@@ -1180,6 +1255,7 @@ window.addEventListener('error', function(e){ console.error('App error:', e.mess
   refreshReminderLabel();
   renderReminderAvailability();
   prefetchHealing();
+  maybeShowInstallBanner();
   const selarEl = document.getElementById('selarLink');
   const gumroadEl = document.getElementById('gumroadLink');
   if(selarEl) selarEl.href = SELAR_URL;
