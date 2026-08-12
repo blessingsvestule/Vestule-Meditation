@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vestule Meditation — Code Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10151C; --ink-2:#171E27; --ink-3:#212A35;
+    --parchment:#EDE6D6; --parchment-dim:#B9B3A2;
+    --amber:#C8893F; --amber-soft:#E0AD73; --sage:#6B8470; --danger:#C97361;
+    --serif:'Source Serif 4', serif; --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:var(--sans); background:radial-gradient(circle at 30% 0%, #182028 0%, var(--ink) 60%);
+    color:var(--parchment); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .card{ max-width:440px; width:100%; }
+  .eyebrow{ font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--sage); font-weight:700; margin-bottom:8px; text-align:center; }
+  h1{ font-family:var(--serif); font-weight:500; font-size:24px; text-align:center; margin-bottom:26px; }
+
+  .gate{ background:var(--ink-2); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:24px; }
+  .gate p{ font-size:13px; color:var(--parchment-dim); margin-bottom:16px; line-height:1.5; }
+  input{ width:100%; background:var(--ink-3); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:13px 14px; color:var(--parchment); font-family:var(--sans); font-size:14.5px; margin-bottom:14px; }
+  button{ font-family:var(--sans); font-weight:700; font-size:14.5px; border:none; cursor:pointer; border-radius:12px; padding:13px; background:var(--amber); color:var(--ink); }
+  .full{ width:100%; }
+  .error{ color:var(--danger); font-size:12.5px; margin-top:10px; display:none; }
+
+  .tracker{ display:none; }
+  .platform-card{ background:var(--ink-2); border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:20px; margin-bottom:14px; text-align:center; }
+  .platform-name{ font-family:var(--serif); font-size:17px; margin-bottom:4px; }
+  .platform-stock{ font-size:12px; color:var(--parchment-dim); margin-bottom:16px; }
+  .get-btn{ width:100%; padding:14px; }
+  .get-btn.gum{ background:var(--sage); color:var(--ink); }
+  .get-btn.sel{ background:var(--amber); color:var(--ink); }
+
+  .code-reveal{ display:none; margin-top:14px; padding:18px; background:var(--ink-3); border-radius:12px; border:1px solid rgba(200,137,63,0.3); }
+  .code-text{ font-family:var(--serif); font-size:22px; letter-spacing:1px; color:var(--amber-soft); text-align:center; word-break:break-all; margin-bottom:12px; }
+  .copy-btn{ width:100%; background:rgba(255,255,255,0.08); color:var(--parchment); font-size:13px; padding:10px; }
+  .copy-btn.copied{ background:rgba(107,132,112,0.25); color:var(--sage); }
+  .reveal-note{ font-size:11.5px; color:var(--parchment-dim); text-align:center; margin-top:10px; }
+
+  .history{ margin-top:20px; }
+  .history-title{ font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--parchment-dim); font-weight:700; margin-bottom:10px; }
+  .history-item{ display:flex; justify-content:space-between; background:var(--ink-2); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:10px 14px; margin-bottom:6px; font-size:12.5px; }
+  .history-code{ color:var(--amber-soft); font-weight:700; }
+  .history-time{ color:var(--parchment-dim); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">Private · Not linked from the app</div>
+  <h1>Code Tracker</h1>
+
+  <div class="gate" id="gate">
+    <p>Tap-to-claim the next unlock code for Selar or Gumroad buyers. Enter your admin passphrase to continue.</p>
+    <input type="password" id="passInput" placeholder="Admin passphrase">
+    <button class="full" onclick="checkPass()">Open tracker</button>
+    <div class="error" id="gateError">That passphrase doesn't match.</div>
+  </div>
+
+  <div class="tracker" id="tracker">
+    <div class="platform-card">
+      <div class="platform-name">Gumroad</div>
+      <div class="platform-stock" id="gumStock">Checking stock…</div>
+      <button class="get-btn gum full" onclick="getNextCode('GUM')">Get next Gumroad code</button>
+      <div class="code-reveal" id="revealGUM">
+        <div class="code-text" id="codeTextGUM"></div>
+        <button class="copy-btn full" onclick="copyCode('GUM')">📋 Copy code</button>
+        <div class="reveal-note">This code is now claimed — send it to the buyer, then it's done.</div>
+      </div>
+    </div>
+
+    <div class="platform-card">
+      <div class="platform-name">Selar</div>
+      <div class="platform-stock" id="selStock">Checking stock…</div>
+      <button class="get-btn sel full" onclick="getNextCode('SEL')">Get next Selar code</button>
+      <div class="code-reveal" id="revealSEL">
+        <div class="code-text" id="codeTextSEL"></div>
+        <button class="copy-btn full" onclick="copyCode('SEL')">📋 Copy code</button>
+        <div class="reveal-note">This code is now claimed — send it to the buyer, then it's done.</div>
+      </div>
+    </div>
+
+    <div class="history">
+      <div class="history-title">Recently claimed (this session)</div>
+      <div id="historyList"></div>
+    </div>
+
+    <button class="full" style="margin-top:14px; background:rgba(255,255,255,0.06); color:var(--parchment);" onclick="refreshStock()">↻ Refresh stock</button>
+  </div>
+</div>
+
+<script>
+// EDIT THESE before using: same Supabase project details as the main app,
+// plus a passphrase of your choosing.
+const SUPABASE_URL = 'https://REPLACE-YOUR-PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'REPLACE-WITH-YOUR-ANON-PUBLIC-KEY';
+const ADMIN_PASSPHRASE = 'REPLACE-WITH-YOUR-OWN-PASSPHRASE';
+
+let sessionHistory = [];
+
+function checkPass(){
+  const val = document.getElementById('passInput').value;
+  const errEl = document.getElementById('gateError');
+  if(val === ADMIN_PASSPHRASE){
+    errEl.style.display = 'none';
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('tracker').style.display = 'block';
+    refreshStock();
+  } else {
+    errEl.style.display = 'block';
+  }
+}
+
+async function callRpc(fn, body){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(body || {})
+  });
+  return res.json();
+}
+
+async function refreshStock(){
+  try{
+    const rows = await callRpc('get_platform_stock');
+    const gum = rows.find(r => r.platform === 'GUM');
+    const sel = rows.find(r => r.platform === 'SEL');
+    document.getElementById('gumStock').textContent = (gum ? gum.remaining : '?') + ' codes left';
+    document.getElementById('selStock').textContent = (sel ? sel.remaining : '?') + ' codes left';
+  } catch(e){
+    document.getElementById('gumStock').textContent = 'Could not check stock';
+    document.getElementById('selStock').textContent = 'Could not check stock';
+  }
+}
+
+async function getNextCode(prefix){
+  try{
+    const code = await callRpc('assign_next_code_by_prefix', { p_prefix: prefix });
+    const revealEl = document.getElementById('reveal' + prefix);
+    const textEl = document.getElementById('codeText' + prefix);
+    if(!code){
+      alert('No codes left for this platform — ask Claude to generate more.');
+      return;
+    }
+    textEl.textContent = code;
+    revealEl.style.display = 'block';
+    sessionHistory.unshift({ code, time: new Date().toLocaleTimeString() });
+    renderHistory();
+    refreshStock();
+  } catch(e){
+    alert('Could not reach the server — check your connection and try again.');
+  }
+}
+
+function copyCode(prefix){
+  const text = document.getElementById('codeText' + prefix).textContent;
+  const btn = event.target;
+  navigator.clipboard.writeText(text).then(()=>{
+    const original = btn.textContent;
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+  }).catch(()=>{ alert('Could not copy — select and copy the code manually.'); });
+}
+
+function renderHistory(){
+  const wrap = document.getElementById('historyList');
+  if(sessionHistory.length === 0){ wrap.innerHTML = '<div style="font-size:12px; color:var(--parchment-dim);">Nothing claimed yet this session.</div>'; return; }
+  wrap.innerHTML = sessionHistory.slice(0, 10).map(h =>
+    `<div class="history-item"><span class="history-code">${h.code}</span><span class="history-time">${h.time}</span></div>`
+  ).join('');
+}
+</script>
+</body>
+</html>
