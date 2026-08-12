@@ -1162,11 +1162,22 @@ function exportPDF(){
     y += 24;
   });
 
-  const blobUrl = doc.output('bloburl');
-  const opened = window.open(blobUrl, '_blank');
-  if(!opened){
-    // popup blocked — fall back to a direct download so the user still gets it
-    doc.save('vestule-meditation-my-list.pdf');
+  const pdfBlob = doc.output('blob');
+  const pdfFile = new File([pdfBlob], 'vestule-meditation-my-list.pdf', { type: 'application/pdf' });
+
+  if(navigator.canShare && navigator.canShare({ files: [pdfFile] })){
+    navigator.share({
+      files: [pdfFile],
+      title: 'My List — Vestule Meditation',
+      text: 'My scripture list from Vestule Meditation'
+    }).catch(()=>{ /* user cancelled the share sheet — no action needed */ });
+  } else {
+    const blobUrl = doc.output('bloburl');
+    const opened = window.open(blobUrl, '_blank');
+    if(!opened){
+      // popup blocked — fall back to a direct download so the user still gets it
+      doc.save('vestule-meditation-my-list.pdf');
+    }
   }
 }
 function listAsText(){
