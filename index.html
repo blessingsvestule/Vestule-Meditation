@@ -245,7 +245,7 @@
         <div class="chevron">›</div>
       </div>
       <div class="quick-link" onclick="openPaywall(null)">
-        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">✨</div><div><div class="ql-title" id="unlockTitle">Unlock all packages</div><div class="ql-sub">One payment, everything, forever</div></div></div>
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">✨</div><div><div class="ql-title" id="unlockTitle">Unlock all packages</div><div class="ql-sub">One payment unlocks all packages</div></div></div>
         <div class="chevron">›</div>
       </div>
       <div class="quick-link" onclick="go('mylist'); setTimeout(exportPDF, 50)">
@@ -267,6 +267,7 @@
       <div class="flame-lbl">Day Streak</div>
     </div>
     <div class="week-strip" id="weekStrip"></div>
+    <div class="note-box" style="margin-bottom:16px;">Miss a single day and your streak is safe — it only resets if you go two days in a row without opening a verse.</div>
     <div class="section-sub" style="margin-bottom:10px;">Milestones</div>
     <div class="badge-grid" id="badgeGrid"></div>
   </div>
@@ -281,13 +282,19 @@
     <div class="field-label">Daily Reminder</div>
     <div id="reminderSupported">
       <div class="quick-link" style="margin-bottom:6px;">
-        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">⏰</div><div><div class="ql-title">Remind me to listen</div><div class="ql-sub">A gentle nudge, once a day — you choose the time</div></div></div>
-        <input type="time" id="reminderTimeInput" class="text-input" style="width:auto; padding:8px 10px;" onchange="setReminderTime(this.value)">
+        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">⏰</div><div><div class="ql-title">Remind me to listen</div><div class="ql-sub">Pick a time, then enable</div></div></div>
+        <input type="time" id="reminderTimeInput" class="text-input" style="width:auto; padding:8px 10px;">
       </div>
-      <div class="quick-link">
-        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">🔕</div><div><div class="ql-title">Turn reminders off</div><div class="ql-sub" id="reminderStatusLabel">Not set</div></div></div>
-        <button class="btn btn-ghost btn-sm" onclick="setReminderTime('off')">Off</button>
+      <div id="reminderEnableRow">
+        <button class="btn btn-primary btn-block" onclick="enablePushReminder()">Enable notifications</button>
       </div>
+      <div id="reminderActiveRow" style="display:none;">
+        <div class="quick-link">
+          <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">🔔</div><div><div class="ql-title">Reminders are on</div><div class="ql-sub" id="reminderStatusLabel">—</div></div></div>
+          <button class="btn btn-ghost btn-sm" onclick="disablePushReminder()">Turn off</button>
+        </div>
+      </div>
+      <div id="reminderPermissionNote" class="note-box" style="display:none;">Notifications are blocked for this site in your browser settings. You'll need to allow them there before this can work.</div>
       <div class="note-box">One more step to make this real: add Vestule Meditation to your home screen (share icon → "Add to Home Screen") so it's allowed to notify you, the same way any app is.</div>
     </div>
     <div id="reminderUnsupported" style="display:none;">
@@ -430,7 +437,7 @@
 <div class="sheet-overlay" id="sheetOverlay" onclick="if(event.target===this) closePaywall()">
   <div class="sheet">
     <div class="sheet-title" id="sheetTitle">Unlock everything</div>
-    <div class="sheet-body" id="sheetBody" style="margin-top:6px;">One payment unlocks every package — New Believer and Healing stay free either way. See current pricing and buy on Selar or Gumroad, then enter your code below to unlock it right here.</div>
+    <div class="sheet-body" id="sheetBody" style="margin-top:6px;">One payment unlocks all packages — New Believer and Healing stay free either way. See current pricing and buy on Selar or Gumroad, then enter your code below to unlock it right here.</div>
     <div style="display:flex; gap:10px; margin-bottom:14px;">
       <a class="btn btn-ghost" style="flex:1; text-align:center; text-decoration:none;" id="selarLink" href="#" target="_blank" rel="noopener">Buy on Selar</a>
       <a class="btn btn-ghost" style="flex:1; text-align:center; text-decoration:none;" id="gumroadLink" href="#" target="_blank" rel="noopener">Buy on Gumroad</a>
@@ -535,8 +542,15 @@ function bumpStreak(){
     const today = new Date().toDateString();
     const data = JSON.parse(safeGet('vm_streak') || '{"count":0,"last":null}');
     if(data.last !== today){
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
-      data.count = (data.last === yesterday) ? data.count + 1 : 1;
+      if(data.last){
+        const lastDate = new Date(data.last);
+        const daysSince = Math.round((new Date(today) - lastDate) / 86400000);
+        // 1 day gap = consecutive use, counts up. 2 day gap = one missed day, forgiven, streak continues.
+        // 3+ day gap = streak broken, starts over.
+        data.count = (daysSince <= 2) ? data.count + 1 : 1;
+      } else {
+        data.count = 1;
+      }
       data.last = today;
       safeSet('vm_streak', JSON.stringify(data));
     }
@@ -616,11 +630,11 @@ function deviceSupportsReminders(){
   const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
   if(isIOS){
     const m = ua.match(/OS (\d+)_(\d+)/);
-    if(!m) return false; // can't confirm version — treat as unsupported rather than risk a false promise
+    if(!m) return false;
     const major = parseInt(m[1],10), minor = parseInt(m[2],10);
     return (major > 16) || (major===16 && minor>=4);
   }
-  return ('Notification' in window); // Android / other browsers with notification support
+  return ('serviceWorker' in navigator && 'PushManager' in window);
 }
 function renderReminderAvailability(){
   const supported = deviceSupportsReminders();
@@ -629,19 +643,109 @@ function renderReminderAvailability(){
   if(supEl) supEl.style.display = supported ? '' : 'none';
   if(unsupEl) unsupEl.style.display = supported ? 'none' : '';
 }
-function setReminderTime(t){
-  safeSet('vm_reminder', t);
+
+// EDIT THIS before publishing — your VAPID public key (safe to expose publicly).
+const VAPID_PUBLIC_KEY = 'BIEkIWmGOMkllV5N4dGlngVm2pIZMz2RL1L6Qi0PMpx2rpKjiqaCFBSwaseFyjg7IhNp6Tq0V6WZlu5mdetUBSc';
+
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for(let i=0; i<rawData.length; i++){ outputArray[i] = rawData.charCodeAt(i); }
+  return outputArray;
+}
+async function callRpc(fn, body){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(body || {})
+  });
+  return res.json();
+}
+async function enablePushReminder(){
+  const timeInput = document.getElementById('reminderTimeInput');
+  if(!timeInput.value){ alert('Pick a time first.'); return; }
+
+  if(Notification.permission === 'denied'){
+    document.getElementById('reminderPermissionNote').style.display = 'block';
+    return;
+  }
+
+  try{
+    const permission = await Notification.requestPermission();
+    if(permission !== 'granted'){
+      document.getElementById('reminderPermissionNote').style.display = 'block';
+      return;
+    }
+    document.getElementById('reminderPermissionNote').style.display = 'none';
+
+    const reg = await navigator.serviceWorker.register('sw.js');
+    await navigator.serviceWorker.ready;
+
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub){
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    const subJson = sub.toJSON();
+
+    const [h, m] = timeInput.value.split(':').map(Number);
+    const localDate = new Date();
+    localDate.setHours(h, m, 0, 0);
+    const utcMinutes = localDate.getUTCHours() * 60 + localDate.getUTCMinutes();
+
+    await callRpc('save_push_subscription', {
+      p_endpoint: subJson.endpoint,
+      p_p256dh: subJson.keys.p256dh,
+      p_auth: subJson.keys.auth,
+      p_reminder_utc_minutes: utcMinutes
+    });
+
+    safeSet('vm_push_endpoint', subJson.endpoint);
+    safeSet('vm_reminder_local_time', timeInput.value);
+    refreshReminderLabel();
+  } catch(e){
+    console.warn('Could not enable reminders:', e);
+    alert('Something went wrong enabling reminders. Check your connection and try again.');
+  }
+}
+async function disablePushReminder(){
+  const endpoint = safeGet('vm_push_endpoint');
+  try{
+    if(endpoint) await callRpc('remove_push_subscription', { p_endpoint: endpoint });
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(reg){
+      const sub = await reg.pushManager.getSubscription();
+      if(sub) await sub.unsubscribe();
+    }
+  } catch(e){ console.warn('Could not fully disable reminders:', e); }
+  safeSet('vm_push_endpoint', '');
+  safeSet('vm_reminder_local_time', '');
   refreshReminderLabel();
 }
 function refreshReminderLabel(){
-  const t = safeGet('vm_reminder');
+  const endpoint = safeGet('vm_push_endpoint');
+  const localTime = safeGet('vm_reminder_local_time');
+  const isActive = !!endpoint;
   const label1 = document.getElementById('reminderSubLabel');
   const label2 = document.getElementById('reminderStatusLabel');
-  const text = deviceSupportsReminders() ? (t ? formatTime12h(t) : 'Not set') : 'Not available on this device';
+  const enableRow = document.getElementById('reminderEnableRow');
+  const activeRow = document.getElementById('reminderActiveRow');
+  const text = !deviceSupportsReminders() ? 'Not available on this device'
+    : isActive ? formatTime12h(localTime) : 'Not set';
   if(label1) label1.textContent = text;
   if(label2) label2.textContent = text;
+  if(enableRow) enableRow.style.display = isActive ? 'none' : '';
+  if(activeRow) activeRow.style.display = isActive ? '' : 'none';
   const input = document.getElementById('reminderTimeInput');
-  if(input && t && t!=='off') input.value = t;
+  if(input && localTime) input.value = localTime;
 }
 function toggleShowText(checked){
   safeSet('vm_show_text', checked ? '1' : '0');
@@ -769,8 +873,8 @@ function escapeAttr(s){ return s.replace(/'/g, "\\'"); }
 // and the unlock_codes table itself is locked down so this key can never read it directly.
 const SELAR_URL = 'https://selar.co/REPLACE-WITH-YOUR-PRODUCT-LINK';
 const GUMROAD_URL = 'https://REPLACE.gumroad.com/l/REPLACE-WITH-YOUR-PRODUCT';
-const SUPABASE_URL = 'https://REPLACE-YOUR-PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'REPLACE-WITH-YOUR-ANON-PUBLIC-KEY';
+const SUPABASE_URL = 'https://nqufzhiadvqdnuoolhwi.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_--bAGFXbwzQUY4fXQM--Zg_ahVCvLbC';
 
 function openPaywall(pkgId){
   paywallContextPkg = pkgId;
@@ -1285,6 +1389,10 @@ window.addEventListener('error', function(e){ console.error('App error:', e.mess
   if(showText === '0'){
     if(showTextToggle) showTextToggle.checked = false;
     document.getElementById('playerText').style.visibility = 'hidden';
+  }
+  refreshReminderLabel();
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker registration failed:', e));
   }
 })();
 </script>
