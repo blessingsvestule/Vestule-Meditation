@@ -186,7 +186,7 @@
   .translation-note{ text-align:center; font-size:11px; color:var(--parchment-dim); margin-top:14px; }
   .loop-pkg-btn{ width:100%; margin-bottom:14px; padding:13px; border-radius:13px; background:rgba(200,137,63,0.1); border:1px solid rgba(200,137,63,0.3); color:var(--amber-soft); font-weight:700; font-size:13.5px; cursor:pointer; }
 
-  .clock-face-wrap{ display:flex; justify-content:center; margin-bottom:14px; touch-action:none; }
+  .clock-face-wrap{ display:flex; justify-content:center; margin-bottom:14px; }
   .clock-number text{ fill:var(--parchment-dim); font-family:var(--sans); font-weight:700; font-size:15px; text-anchor:middle; dominant-baseline:middle; }
   .clock-number.selected text{ fill:var(--ink); font-weight:800; }
   .clock-number circle{ fill:transparent; }
@@ -307,7 +307,7 @@
           <div class="mode-toggle-btn" id="modeMinuteBtn" onclick="setClockMode('minute')">Minute</div>
         </div>
         <div class="clock-face-wrap">
-          <svg id="clockFace" width="220" height="220" viewBox="0 0 220 220"></svg>
+          <svg id="clockFace" width="220" height="220" viewBox="0 0 220 220" onclick="clockClick(event)" style="cursor:pointer;"></svg>
         </div>
         <div class="ampm-row">
           <div class="ampm-btn selected" id="ampmAM" onclick="setAmPm('AM')">AM</div>
@@ -702,7 +702,6 @@ let selectedAmPm = 'PM';
 let selectedHour = 7;
 let selectedMinute = 0;
 let clockMode = 'hour'; // 'hour' or 'minute'
-let isDraggingClock = false;
 
 function setClockMode(mode){
   clockMode = mode;
@@ -784,18 +783,8 @@ function updateFromAngle(deg){
   }
   renderClockFace();
 }
-function clockPointerDown(evt){
-  isDraggingClock = true;
+function clockClick(evt){
   updateFromAngle(angleFromPointer(evt));
-  evt.preventDefault();
-}
-function clockPointerMove(evt){
-  if(!isDraggingClock) return;
-  updateFromAngle(angleFromPointer(evt));
-  evt.preventDefault();
-}
-function clockPointerUp(){
-  isDraggingClock = false;
 }
 function setAmPm(v){
   selectedAmPm = v;
@@ -1539,15 +1528,6 @@ window.addEventListener('error', function(e){ console.error('App error:', e.mess
     document.getElementById('playerText').style.visibility = 'hidden';
   }
   renderClockFace();
-  const clockEl = document.getElementById('clockFace');
-  if(clockEl){
-    clockEl.addEventListener('mousedown', clockPointerDown);
-    clockEl.addEventListener('touchstart', clockPointerDown, { passive: false });
-    document.addEventListener('mousemove', clockPointerMove);
-    document.addEventListener('touchmove', clockPointerMove, { passive: false });
-    document.addEventListener('mouseup', clockPointerUp);
-    document.addEventListener('touchend', clockPointerUp);
-  }
   refreshReminderLabel();
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker registration failed:', e));
