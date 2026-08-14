@@ -281,9 +281,25 @@
 
     <div class="field-label">Daily Reminder</div>
     <div id="reminderSupported">
-      <div class="quick-link" style="margin-bottom:6px;">
-        <div class="ql-left"><div class="ql-icon" style="background:rgba(107,132,112,0.14); color:var(--sage);">⏰</div><div><div class="ql-title">Remind me to listen</div><div class="ql-sub">Pick a time, then enable</div></div></div>
-        <input type="time" id="reminderTimeInput" class="text-input" style="width:auto; padding:8px 10px;">
+      <div style="margin-bottom:14px;">
+        <div class="ql-title" style="margin-bottom:10px;">Remind me to listen</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select id="reminderHour" class="text-input" style="width:auto; padding:10px;">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7" selected>7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+          </select>
+          <span style="font-weight:700; color:var(--parchment-dim);">:</span>
+          <select id="reminderMinute" class="text-input" style="width:auto; padding:10px;">
+            <option value="00" selected>00</option><option value="15">15</option>
+            <option value="30">30</option><option value="45">45</option>
+          </select>
+          <div style="display:flex; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+            <div id="ampmAM" class="range-choice" style="border-radius:0; margin:0;" onclick="setAmPm('AM')">AM</div>
+            <div id="ampmPM" class="range-choice active" style="border-radius:0; margin:0;" onclick="setAmPm('PM')">PM</div>
+          </div>
+        </div>
       </div>
       <div id="reminderEnableRow">
         <button class="btn btn-primary btn-block" onclick="enablePushReminder()">Enable notifications</button>
@@ -295,7 +311,7 @@
         </div>
       </div>
       <div id="reminderPermissionNote" class="note-box" style="display:none;">Notifications are blocked for this site in your browser settings. You'll need to allow them there before this can work.</div>
-      <div class="note-box">One more step to make this real: add Vestule Meditation to your home screen (share icon → "Add to Home Screen") so it's allowed to notify you, the same way any app is.</div>
+      <div class="note-box">One more step to make this real: add Vestule Meditation to your home screen (share icon → "Add to Home Screen") so it's allowed to notify you.</div>
     </div>
     <div id="reminderUnsupported" style="display:none;">
       <div class="note-box" style="background:rgba(200,137,63,0.08); border-color:rgba(200,137,63,0.22);">
@@ -669,10 +685,27 @@ async function callRpc(fn, body){
   if(!res.ok) throw new Error('Server error (' + res.status + '): ' + text);
   return text ? JSON.parse(text) : null;
 }
+let selectedAmPm = 'PM';
+function setAmPm(v){
+  selectedAmPm = v;
+  document.getElementById('ampmAM').classList.toggle('active', v==='AM');
+  document.getElementById('ampmPM').classList.toggle('active', v==='PM');
+}
+function get24HourTime(){
+  let h = parseInt(document.getElementById('reminderHour').value, 10);
+  const m = document.getElementById('reminderMinute').value;
+  if(selectedAmPm === 'AM'){ if(h === 12) h = 0; }
+  else { if(h !== 12) h += 12; }
+  return { h, m: parseInt(m, 10) };
+}
+function set24HourTime(h24, m){
+  const ampm = h24 >= 12 ? 'PM' : 'AM';
+  let h12 = h24 % 12; if(h12 === 0) h12 = 12;
+  document.getElementById('reminderHour').value = String(h12);
+  document.getElementById('reminderMinute').value = String(m).padStart(2,'0');
+  setAmPm(ampm);
+}
 async function enablePushReminder(){
-  const timeInput = document.getElementById('reminderTimeInput');
-  if(!timeInput.value){ alert('Pick a time first.'); return; }
-
   if(Notification.permission === 'denied'){
     document.getElementById('reminderPermissionNote').style.display = 'block';
     return;
@@ -698,7 +731,7 @@ async function enablePushReminder(){
     }
     const subJson = sub.toJSON();
 
-    const [h, m] = timeInput.value.split(':').map(Number);
+    const { h, m } = get24HourTime();
     const localDate = new Date();
     localDate.setHours(h, m, 0, 0);
     const utcMinutes = localDate.getUTCHours() * 60 + localDate.getUTCMinutes();
@@ -711,7 +744,7 @@ async function enablePushReminder(){
     });
 
     safeSet('vm_push_endpoint', subJson.endpoint);
-    safeSet('vm_reminder_local_time', timeInput.value);
+    safeSet('vm_reminder_local_time', String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'));
     refreshReminderLabel();
   } catch(e){
     console.warn('Could not enable reminders:', e);
@@ -746,8 +779,10 @@ function refreshReminderLabel(){
   if(label2) label2.textContent = text;
   if(enableRow) enableRow.style.display = isActive ? 'none' : '';
   if(activeRow) activeRow.style.display = isActive ? '' : 'none';
-  const input = document.getElementById('reminderTimeInput');
-  if(input && localTime) input.value = localTime;
+  if(localTime){
+    const [h24, m] = localTime.split(':').map(Number);
+    set24HourTime(h24, m);
+  }
 }
 function toggleShowText(checked){
   safeSet('vm_show_text', checked ? '1' : '0');
