@@ -645,7 +645,7 @@ function renderReminderAvailability(){
 }
 
 // EDIT THIS before publishing — your VAPID public key (safe to expose publicly).
-const VAPID_PUBLIC_KEY = 'BIEkIWmGOMkllV5N4dGlngVm2pIZMz2RL1L6Qi0PMpx2rpKjiqaCFBSwaseFyjg7IhNp6Tq0V6WZlu5mdetUBSc';
+const VAPID_PUBLIC_KEY = 'REPLACE-WITH-YOUR-VAPID-PUBLIC-KEY';
 
 function urlBase64ToUint8Array(base64String){
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -665,7 +665,9 @@ async function callRpc(fn, body){
     },
     body: JSON.stringify(body || {})
   });
-  return res.json();
+  const text = await res.text();
+  if(!res.ok) throw new Error('Server error (' + res.status + '): ' + text);
+  return text ? JSON.parse(text) : null;
 }
 async function enablePushReminder(){
   const timeInput = document.getElementById('reminderTimeInput');
@@ -873,8 +875,8 @@ function escapeAttr(s){ return s.replace(/'/g, "\\'"); }
 // and the unlock_codes table itself is locked down so this key can never read it directly.
 const SELAR_URL = 'https://selar.co/REPLACE-WITH-YOUR-PRODUCT-LINK';
 const GUMROAD_URL = 'https://REPLACE.gumroad.com/l/REPLACE-WITH-YOUR-PRODUCT';
-const SUPABASE_URL = 'https://nqufzhiadvqdnuoolhwi.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_--bAGFXbwzQUY4fXQM--Zg_ahVCvLbC';
+const SUPABASE_URL = 'https://REPLACE-YOUR-PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'REPLACE-WITH-YOUR-ANON-PUBLIC-KEY';
 
 function openPaywall(pkgId){
   paywallContextPkg = pkgId;
