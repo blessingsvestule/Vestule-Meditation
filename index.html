@@ -314,8 +314,15 @@
           <div class="ampm-btn" id="ampmPM" onclick="setAmPm('PM')">PM</div>
         </div>
       </div>
+      <div class="note-box" style="background:rgba(107,132,112,0.1); border-color:rgba(107,132,112,0.3); margin-bottom:14px;">
+        <strong style="color:var(--sage);">Recommended — most reliable option</strong><br>
+        Add a daily reminder to your phone's Calendar app, set as an <strong>Alarm</strong> (not a Notification). An alarm rings with sound even when your phone is on silent — this is the same approach used in Vestule Care, and it's far more dependable than app notifications.
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-bottom:20px;" onclick="addCalendarReminder()">📅 Add daily reminder to Calendar</button>
+
+      <div class="field-label" style="text-align:center;">Or use in-app notifications (less reliable)</div>
       <div id="reminderEnableRow">
-        <button class="btn btn-primary btn-block" onclick="enablePushReminder()">Enable notifications</button>
+        <button class="btn btn-ghost btn-block" onclick="enablePushReminder()">Enable notifications</button>
       </div>
       <div id="reminderActiveRow" style="display:none;">
         <div class="quick-link">
@@ -424,10 +431,29 @@
     </div>
 
     <div id="addByRef">
-      <div class="field-label">Scripture reference</div>
-      <input class="text-input" id="quickRef" placeholder="e.g. Jeremiah 17:14 — heard it in church? type it here">
-      <div class="note-box" style="margin-top:10px;">We'll pull the exact BSB wording for you — no need to type it out.</div>
+      <div class="field-label">Book</div>
+      <select class="text-input" id="quickBook"></select>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <div style="flex:1;">
+          <div class="field-label">Chapter</div>
+          <input type="number" min="1" class="text-input" id="quickChapter" placeholder="e.g. 17">
+        </div>
+        <div style="flex:1;">
+          <div class="field-label">Verse</div>
+          <input type="number" min="1" class="text-input" id="quickVerse" placeholder="e.g. 14">
+        </div>
+      </div>
+      <div class="note-box" style="margin-top:14px;">Pick the book from the list, then type just the chapter and verse numbers — no spelling needed. We'll pull the exact BSB wording for you.</div>
       <div class="cta-row" style="margin-top:18px;"><button class="btn btn-primary btn-block" onclick="lookupAndPlay()">Look up & loop it</button></div>
+
+      <div style="text-align:center; margin-top:18px;">
+        <span style="font-size:12.5px; color:var(--parchment-dim); text-decoration:underline; cursor:pointer;" onclick="toggleTypedRef()">I'd rather type the reference myself</span>
+      </div>
+      <div id="typedRefRow" style="display:none; margin-top:14px;">
+        <div class="field-label">Scripture reference</div>
+        <input class="text-input" id="quickRef" placeholder="e.g. Jeremiah 17:14">
+        <div class="cta-row" style="margin-top:14px;"><button class="btn btn-ghost btn-block" onclick="lookupAndPlayTyped()">Look up & loop it</button></div>
+      </div>
     </div>
 
     <div id="addByText" style="display:none;">
@@ -797,6 +823,24 @@ function get24HourTime(){
   else { if(h !== 12) h += 12; }
   return { h, m: selectedMinute };
 }
+function toGCalDate(d){
+  return d.getUTCFullYear() + String(d.getUTCMonth()+1).padStart(2,'0') + String(d.getUTCDate()).padStart(2,'0')
+    + 'T' + String(d.getUTCHours()).padStart(2,'0') + String(d.getUTCMinutes()).padStart(2,'0') + '00Z';
+}
+function addCalendarReminder(){
+  const { h, m } = get24HourTime();
+  const start = new Date();
+  start.setHours(h, m, 0, 0);
+  if(start < new Date()) start.setDate(start.getDate() + 1); // if time already passed today, start tomorrow
+  const end = new Date(start.getTime() + 15*60000);
+
+  const title = encodeURIComponent('Vestule Meditation — Quiet Time');
+  const details = encodeURIComponent('Open Vestule Meditation and loop a verse. Tip: tap this event\u2019s reminder and set it to "Alarm" instead of "Notification" so it rings even on silent.');
+  const dates = toGCalDate(start) + '/' + toGCalDate(end);
+  const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title
+    + '&dates=' + dates + '&details=' + details + '&recur=RRULE:FREQ=DAILY';
+  window.open(url, '_blank');
+}
 function set24HourTime(h24, m){
   const ampm = h24 >= 12 ? 'PM' : 'AM';
   let h12 = h24 % 12; if(h12 === 0) h12 = 12;
@@ -1009,7 +1053,7 @@ function escapeAttr(s){ return s.replace(/'/g, "\\'"); }
 // The anon key is meant to be public — it only allows what your database rules permit,
 // and the unlock_codes table itself is locked down so this key can never read it directly.
 const SELAR_URL = 'https://selar.com/18xh8fxw57';
-const GUMROAD_URL = 'https://REPLACE.gumroad.com/l/REPLACE-WITH-YOUR-PRODUCT';
+const GUMROAD_URL = 'https://blessingsv.gumroad.com/l/smnvwn';
 const SUPABASE_URL = 'https://nqufzhiadvqdnuoolhwi.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_--bAGFXbwzQUY4fXQM--Zg_ahVCvLbC';
 
@@ -1273,7 +1317,41 @@ function setAddOwnMode(mode){
   document.getElementById('addByRef').style.display = mode==='ref' ? '' : 'none';
   document.getElementById('addByText').style.display = mode==='text' ? '' : 'none';
 }
+function toTitleCase(s){
+  return s.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1));
+}
+function populateBookDropdown(){
+  const sel = document.getElementById('quickBook');
+  if(!sel || sel.options.length > 0) return; // already populated
+  const skipDuplicates = new Set(['psalms', 'song of songs']); // same book, alternate name already covered
+  Object.keys(BOOK_IDS).forEach(key => {
+    if(skipDuplicates.has(key)) return;
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = toTitleCase(key);
+    sel.appendChild(opt);
+  });
+}
+function toggleTypedRef(){
+  const row = document.getElementById('typedRefRow');
+  row.style.display = row.style.display === 'none' ? 'block' : 'none';
+}
 async function lookupAndPlay(){
+  const bookKey = document.getElementById('quickBook').value;
+  const chapter = document.getElementById('quickChapter').value.trim();
+  const verse = document.getElementById('quickVerse').value.trim();
+  if(!bookKey || !chapter || !verse){ alert('Pick a book and fill in the chapter and verse.'); return; }
+  const ref = toTitleCase(bookKey) + ' ' + chapter + ':' + verse;
+  const parsed = parseReference(ref);
+  if(!parsed){ alert('Could not find that verse. Double-check the chapter and verse numbers.'); return; }
+  document.getElementById('quickChapter').value = '';
+  document.getElementById('quickVerse').value = '';
+  await openPlayer(ref);
+  if(currentPlayerVerse && currentPlayerVerse.text){
+    addToList(ref, currentPlayerVerse.text);
+  }
+}
+async function lookupAndPlayTyped(){
   const ref = document.getElementById('quickRef').value.trim();
   if(!ref){ alert('Type a reference first, e.g. Jeremiah 17:14'); return; }
   const parsed = parseReference(ref);
@@ -1507,6 +1585,7 @@ window.addEventListener('error', function(e){ console.error('App error:', e.mess
   refreshReminderLabel();
   renderReminderAvailability();
   prefetchHealing();
+  populateBookDropdown();
   maybeShowInstallBanner();
   const selarEl = document.getElementById('selarLink');
   const gumroadEl = document.getElementById('gumroadLink');
