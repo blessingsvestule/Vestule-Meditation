@@ -1178,7 +1178,7 @@ async function openPlayer(ref, context){
   currentPlayerVerse = { ref, text: null, source:'WEB' };
   document.getElementById('playerRef').textContent = ref;
   document.getElementById('playerText').innerHTML = '<span class="loading-dots">Loading scripture…</span>';
-  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain';
+  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain' + (isCuratedRef(ref) ? ' · Real narrated audio' : ' · Read aloud by your phone\u2019s voice');
 
   const text = await fetchVerseText(ref);
   if(text){
@@ -1214,7 +1214,7 @@ async function loopWholePackage(){
   updateNextButtonVisibility();
   document.getElementById('playerRef').textContent = currentPackage.name;
   document.getElementById('playerText').innerHTML = '<span class="loading-dots">Loading ' + currentPackage.verses.length + ' verses…</span>';
-  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain';
+  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain · Real narrated audio';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-player').classList.add('active');
   window.scrollTo(0,0);
@@ -1267,24 +1267,47 @@ function onPaceChange(v){
   const label = speechRate < 0.85 ? 'Slower' : speechRate > 1.05 ? 'Faster' : 'Normal';
   document.getElementById('paceVal').textContent = label;
 }
+function sanitizeFilename(ref){
+  return ref.replace(/\s+/g,'_').replace(/:/g,'_') + '.mp3';
+}
+let curatedRefsSet = null;
+function isCuratedRef(ref){
+  if(!curatedRefsSet){
+    curatedRefsSet = new Set();
+    PACKAGES.forEach(pkg => pkg.verses.forEach(v => curatedRefsSet.add(v)));
+  }
+  return curatedRefsSet.has(ref);
+}
 function speakItem(item){
   return new Promise((resolve)=>{
-    if(isMuted || !('speechSynthesis' in window)){
+    if(isMuted){
       const dur = Math.min(9000, Math.max(2500, item.text.length * 45));
       pauseTimer = setTimeout(resolve, dur);
       return;
     }
-    const refUtter = new SpeechSynthesisUtterance(item.ref + '.');
-    refUtter.rate = speechRate;
-    refUtter.onend = ()=>{
-      if(!isPlaying){ resolve(); return; }
-      const textUtter = new SpeechSynthesisUtterance(item.text);
-      textUtter.rate = speechRate;
-      textUtter.onend = resolve;
-      window.speechSynthesis.speak(textUtter);
-    };
-    window.speechSynthesis.speak(refUtter);
+    if(isCuratedRef(item.ref)){
+      const audio = new Audio('audio/' + sanitizeFilename(item.ref));
+      audio.playbackRate = speechRate;
+      audio.onended = resolve;
+      audio.onerror = ()=>{ speakItemTTS(item, resolve); }; // file missing/broken — fall back automatically
+      audio.play().catch(()=>{ speakItemTTS(item, resolve); });
+      return;
+    }
+    speakItemTTS(item, resolve);
   });
+}
+function speakItemTTS(item, resolve){
+  if(!('speechSynthesis' in window)){ resolve(); return; }
+  const refUtter = new SpeechSynthesisUtterance(item.ref + '.');
+  refUtter.rate = speechRate;
+  refUtter.onend = ()=>{
+    if(!isPlaying){ resolve(); return; }
+    const textUtter = new SpeechSynthesisUtterance(item.text);
+    textUtter.rate = speechRate;
+    textUtter.onend = resolve;
+    window.speechSynthesis.speak(textUtter);
+  };
+  window.speechSynthesis.speak(refUtter);
 }
 async function speakLoop(){
   if(!isPlaying) return;
