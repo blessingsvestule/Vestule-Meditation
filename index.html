@@ -438,14 +438,18 @@
       <div style="display:flex; gap:10px; margin-top:14px;">
         <div style="flex:1;">
           <div class="field-label">Chapter</div>
-          <input type="number" min="1" class="text-input" id="quickChapter" placeholder="e.g. 17">
+          <input type="number" min="1" class="text-input" id="quickChapter" placeholder="e.g. 58">
         </div>
         <div style="flex:1;">
           <div class="field-label">Verse</div>
-          <input type="number" min="1" class="text-input" id="quickVerse" placeholder="e.g. 14">
+          <input type="number" min="1" class="text-input" id="quickVerse" placeholder="e.g. 1">
+        </div>
+        <div style="flex:1;">
+          <div class="field-label">To verse <span style="text-transform:none; font-weight:500; color:var(--parchment-dim);">(optional)</span></div>
+          <input type="number" min="1" class="text-input" id="quickVerseEnd" placeholder="e.g. 5">
         </div>
       </div>
-      <div class="note-box" style="margin-top:14px;">Pick the book from the list, then type just the chapter and verse numbers — no spelling needed. We'll pull the exact BSB wording for you.</div>
+      <div class="note-box" style="margin-top:14px;">Pick the book from the list, then type the chapter and verse numbers — no spelling needed. Looping more than one verse? Fill in "To verse" too, e.g. Psalm 58, verse 1 to verse 5. Leave it blank for just a single verse.</div>
       <div class="cta-row" style="margin-top:18px;"><button class="btn btn-primary btn-block" onclick="lookupAndPlay()">Look up & loop it</button></div>
 
       <div style="text-align:center; margin-top:18px;">
@@ -1386,12 +1390,15 @@ async function lookupAndPlay(){
   const bookKey = document.getElementById('quickBook').value;
   const chapter = document.getElementById('quickChapter').value.trim();
   const verse = document.getElementById('quickVerse').value.trim();
+  const verseEnd = document.getElementById('quickVerseEnd').value.trim();
   if(!bookKey || !chapter || !verse){ alert('Pick a book and fill in the chapter and verse.'); return; }
-  const ref = toTitleCase(bookKey) + ' ' + chapter + ':' + verse;
+  if(verseEnd && parseInt(verseEnd,10) <= parseInt(verse,10)){ alert('"To verse" should be a higher number than the starting verse.'); return; }
+  const ref = toTitleCase(bookKey) + ' ' + chapter + ':' + verse + (verseEnd ? '-' + verseEnd : '');
   const parsed = parseReference(ref);
   if(!parsed){ alert('Could not find that verse. Double-check the chapter and verse numbers.'); return; }
   document.getElementById('quickChapter').value = '';
   document.getElementById('quickVerse').value = '';
+  document.getElementById('quickVerseEnd').value = '';
   await openPlayer(ref);
   if(currentPlayerVerse && currentPlayerVerse.text){
     addToList(ref, currentPlayerVerse.text);
