@@ -385,6 +385,12 @@
       <div class="back-btn" onclick="stopAndBack()">‹</div>
       <div><div class="section-title">Now looping</div><div class="section-sub">Sit with it as long as you like</div></div>
     </div>
+    <div class="note-box" id="backgroundTip" style="display:none; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div>Tip: use your Home button to keep this playing in the background — the Back button exits, like most apps.</div>
+        <span style="cursor:pointer; color:var(--parchment-dim); font-weight:700; flex-shrink:0;" onclick="dismissBackgroundTip()">✕</span>
+      </div>
+    </div>
     <div class="player-wrap">
       <div class="rep-count" id="repCountLabel">Rep 0</div>
       <div class="ring-wrap">
@@ -1146,7 +1152,18 @@ function beginPlayback(){
   if(bg){ bg.play().catch(()=>{}); }
   updateMediaSession('playing');
   pushBackButtonGuard();
+  maybeShowBackgroundTip();
   speakLoop();
+}
+function maybeShowBackgroundTip(){
+  if(safeGet('vm_bgtip_seen') === '1') return;
+  const tip = document.getElementById('backgroundTip');
+  if(tip) tip.style.display = 'block';
+}
+function dismissBackgroundTip(){
+  safeSet('vm_bgtip_seen', '1');
+  const tip = document.getElementById('backgroundTip');
+  if(tip) tip.style.display = 'none';
 }
 let backGuardActive = false;
 function pushBackButtonGuard(){
