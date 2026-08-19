@@ -1145,8 +1145,25 @@ function beginPlayback(){
   const bg = document.getElementById('bgAudio');
   if(bg){ bg.play().catch(()=>{}); }
   updateMediaSession('playing');
+  pushBackButtonGuard();
   speakLoop();
 }
+let backGuardActive = false;
+function pushBackButtonGuard(){
+  if(!backGuardActive){
+    history.pushState({ vmPlaying: true }, '');
+    backGuardActive = true;
+  }
+}
+window.addEventListener('popstate', function(){
+  if(isPlaying){
+    // Swallow this back-press so the app keeps running in the background,
+    // the same way minimizing does, instead of the browser closing the page.
+    history.pushState({ vmPlaying: true }, '');
+  } else {
+    backGuardActive = false;
+  }
+});
 function updateMediaSession(state){
   if(!('mediaSession' in navigator)) return;
   try{
