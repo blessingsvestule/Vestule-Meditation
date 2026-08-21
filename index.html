@@ -387,7 +387,7 @@
     </div>
     <div class="note-box" id="backgroundTip" style="display:none; margin-bottom:14px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-        <div>Tip: use your Home button to keep this playing in the background — the Back button exits, like most apps.</div>
+        <div>🎧 To keep listening while using another app: just go to your home screen. Please don't tap the Back button — that one closes the app completely.</div>
         <span style="cursor:pointer; color:var(--parchment-dim); font-weight:700; flex-shrink:0;" onclick="dismissBackgroundTip()">✕</span>
       </div>
     </div>
@@ -1200,10 +1200,9 @@ function startPlaying(){
 }
 
 function resetPlayerUI(){
+  stopSpeaking(); // stop whatever was playing before switching to a new verse
   repCount = 0; packageCycles = 0; queueIndex = 0; playQueue = null;
   document.getElementById('repCountLabel').textContent = 'Rep 0';
-  isPlaying = false;
-  document.getElementById('playBtn').textContent = '▶';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-player').classList.add('active');
   window.scrollTo(0,0);
@@ -1285,10 +1284,18 @@ function togglePlay(){
   if(isPlaying){ stopSpeaking(); }
   else { beginPlayback(); }
 }
+let currentRealAudio = null;
 function stopSpeaking(){
   isPlaying = false;
   clearTimeout(pauseTimer);
   if(window.speechSynthesis) window.speechSynthesis.cancel();
+  if(currentRealAudio){
+    currentRealAudio.onended = null;
+    currentRealAudio.onerror = null;
+    currentRealAudio.pause();
+    currentRealAudio.currentTime = 0;
+    currentRealAudio = null;
+  }
   const bg = document.getElementById('bgAudio');
   if(bg){ bg.pause(); }
   updateMediaSession('paused');
@@ -1326,9 +1333,10 @@ function speakItem(item){
     if(isCuratedRef(item.ref)){
       const audio = new Audio('audio/' + sanitizeFilename(item.ref));
       audio.playbackRate = speechRate;
-      audio.onended = resolve;
-      audio.onerror = ()=>{ speakItemTTS(item, resolve); }; // file missing/broken — fall back automatically
-      audio.play().catch(()=>{ speakItemTTS(item, resolve); });
+      currentRealAudio = audio;
+      audio.onended = ()=>{ currentRealAudio = null; resolve(); };
+      audio.onerror = ()=>{ currentRealAudio = null; speakItemTTS(item, resolve); }; // file missing/broken — fall back automatically
+      audio.play().catch(()=>{ currentRealAudio = null; speakItemTTS(item, resolve); });
       return;
     }
     speakItemTTS(item, resolve);
