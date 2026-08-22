@@ -1140,7 +1140,7 @@ function nextInContext(){
     openPlayer(ctx.items[ctx.index], ctx).then(()=>{ if(wasPlaying) startPlaying(); });
   } else {
     const item = ctx.items[ctx.index];
-    openPlayerCustom(item.ref, item.text, ctx);
+    openPlayerCustom(item.ref, item.text, ctx, item.source);
     if(wasPlaying) startPlaying();
   }
 }
@@ -1215,7 +1215,7 @@ async function openPlayer(ref, context){
   currentPlayerVerse = { ref, text: null, source:'WEB' };
   document.getElementById('playerRef').textContent = ref;
   document.getElementById('playerText').innerHTML = '<span class="loading-dots">Loading scripture…</span>';
-  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain' + (isCuratedRef(ref) ? ' · Real narrated audio' : ' · Read aloud by your phone\u2019s voice');
+  document.getElementById('translationNote').textContent = 'Text: Berean Standard Bible (BSB) · public domain' + (parseReference(ref) ? ' · Real narrated audio' : ' · Read aloud by your phone\u2019s voice');
 
   const text = await fetchVerseText(ref);
   if(text){
@@ -1229,20 +1229,22 @@ function openPlayerFromPackage(ref){
   const idx = currentPackage.verses.indexOf(ref);
   openPlayer(ref, { type:'package', items: currentPackage.verses, index: idx });
 }
-function openPlayerCustom(ref, text, context){
+function openPlayerCustom(ref, text, context, source){
   resetPlayerUI();
   navContext = context || null;
   updateNextButtonVisibility();
-  currentPlayerVerse = { ref, text, source:'custom' };
+  currentPlayerVerse = { ref, text, source: source || 'custom' };
   document.getElementById('playerRef').textContent = ref;
   document.getElementById('playerText').textContent = text;
-  document.getElementById('translationNote').textContent = '';
+  document.getElementById('translationNote').textContent = (currentPlayerVerse.source === 'WEB')
+    ? 'Text: Berean Standard Bible (BSB) · public domain · Real narrated audio'
+    : '';
 }
 function openPlayerFromList(id){
   const list = getList();
   const idx = list.findIndex(i=>i.id===id);
   if(idx===-1) return;
-  openPlayerCustom(list[idx].ref, list[idx].text, { type:'mylist', items: list, index: idx });
+  openPlayerCustom(list[idx].ref, list[idx].text, { type:'mylist', items: list, index: idx }, list[idx].source);
 }
 async function loopWholePackage(){
   if(!currentPackage) return;
@@ -1323,8 +1325,27 @@ function isCuratedRef(ref){
   }
   return curatedRefsSet.has(ref);
 }
+function playRealAudioFile(url, resolve){
+  const audio = new Audio(url);
+  audio.playbackRate = speechRate;
+  currentRealAudio = audio;
+  audio.onended = ()=>{ currentRealAudio = null; resolve(); };
+  audio.onerror = ()=>{ currentRealAudio = null; resolve(null); }; // signals caller to fall back
+  audio.play().then(()=>{}).catch(()=>{ currentRealAudio = null; resolve(null); });
+}
+async function getDynamicAudioUrl(payload){
+  try{
+    const res = await fetch(SUPABASE_URL + '/functions/v1/get-verse-audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    return data.url || null;
+  } catch(e){ return null; }
+}
 function speakItem(item){
-  return new Promise((resolve)=>{
+  return new Promise(async (resolve)=>{
     if(isMuted){
       const dur = Math.min(9000, Math.max(2500, item.text.length * 45));
       pauseTimer = setTimeout(resolve, dur);
@@ -1338,6 +1359,27 @@ function speakItem(item){
       audio.onerror = ()=>{ currentRealAudio = null; speakItemTTS(item, resolve); }; // file missing/broken — fall back automatically
       audio.play().catch(()=>{ currentRealAudio = null; speakItemTTS(item, resolve); });
       return;
+    }
+    // Not a curated verse — but if it's a real, recognizable Bible reference,
+    // try getting (or generating) real narrated audio for it dynamically.
+    if(item.source === 'WEB' && parseReference(item.ref)){
+      const url = await getDynamicAudioUrl({ ref: item.ref });
+      if(url && isPlaying){
+        playRealAudioFile(url, (result)=>{
+          if(result === null){ speakItemTTS(item, resolve); } else { resolve(); }
+        });
+        return;
+      }
+    } else if(item.text && item.text.trim().length > 0){
+      // Someone's own typed wording — still get real narration, cached by
+      // the exact text itself rather than any reference label.
+      const url = await getDynamicAudioUrl({ ref: item.ref, customText: item.text });
+      if(url && isPlaying){
+        playRealAudioFile(url, (result)=>{
+          if(result === null){ speakItemTTS(item, resolve); } else { resolve(); }
+        });
+        return;
+      }
     }
     speakItemTTS(item, resolve);
   });
@@ -1384,18 +1426,18 @@ async function speakLoop(){
   const pause = parseInt(document.getElementById('pauseRange').value, 10) * 1000;
   pauseTimer = setTimeout(speakLoop, pause);
 }
-function addToList(ref, text){
+function addToList(ref, text, source){
   const list = getList();
   const exists = list.some(item => item.ref.trim().toLowerCase() === ref.trim().toLowerCase());
   if(exists) return false;
-  list.unshift({ id: Date.now()+'', ref, text });
+  list.unshift({ id: Date.now()+'', ref, text, source: source || 'custom' });
   saveList(list);
   refreshHomeCounts();
   return true;
 }
 function addCurrentToList(){
   if(!currentPlayerVerse || !currentPlayerVerse.text) return;
-  const added = addToList(currentPlayerVerse.ref, currentPlayerVerse.text);
+  const added = addToList(currentPlayerVerse.ref, currentPlayerVerse.text, currentPlayerVerse.source);
   const btn = event.target;
   const original = btn.textContent;
   btn.textContent = added ? 'Saved ✓' : 'Already saved';
@@ -1443,7 +1485,7 @@ async function lookupAndPlay(){
   document.getElementById('quickVerseEnd').value = '';
   await openPlayer(ref);
   if(currentPlayerVerse && currentPlayerVerse.text){
-    addToList(ref, currentPlayerVerse.text);
+    addToList(ref, currentPlayerVerse.text, 'WEB');
   }
 }
 async function lookupAndPlayTyped(){
@@ -1454,14 +1496,14 @@ async function lookupAndPlayTyped(){
   document.getElementById('quickRef').value = '';
   await openPlayer(ref);
   if(currentPlayerVerse && currentPlayerVerse.text){
-    addToList(ref, currentPlayerVerse.text);
+    addToList(ref, currentPlayerVerse.text, 'WEB');
   }
 }
 function saveOwnAndPlay(){
   const ref = document.getElementById('ownRef').value.trim() || 'My Verse';
   const text = document.getElementById('ownText').value.trim();
   if(!text){ alert('Paste or type a verse first.'); return; }
-  addToList(ref, text);
+  addToList(ref, text, 'custom');
   document.getElementById('ownRef').value=''; document.getElementById('ownText').value='';
   openPlayerCustom(ref, text);
 }
